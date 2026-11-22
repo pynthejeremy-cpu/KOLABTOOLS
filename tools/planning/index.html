@@ -536,7 +536,6 @@ const FEATS = [
   ["retro", "Rétroplanning", "view_timeline", "Gantt du projet, planning type et réservation de l’équipe.", "fn"],
   ["iaStudio", "Lien IA Studio", "auto_awesome", "Échange du rétroplanning avec l’IA Studio.", "fn"],
   ["glass", "Liquid Glass", "blur_on", "Verre dépoli, fond vivant, parallaxe et relief 3D.", "fn"],
-  ["styles", "Styles Fil Rouge", "style", "Les 10 styles du système design dans Apparence.", "fn"],
   ["backup", "Sauvegarde du soir vers Drive", "cloud_upload", "Export Excel + JSON chaque soir dans « Sauvegardes des applis › Planning agence ».", "fn"],
   ["help", "Bouton Aide", "help", "Bouton flottant Aide (contact, FAQ, impression, cookies).", "fn"],
 ];
@@ -545,7 +544,7 @@ const LIBERTY = [["imposed", "Charte imposée", "Tout le monde voit la charte ch
 const ADM_DEF = { feat: {}, charte: { glass: true, theme: "a", style: "" }, liberty: "free", lastLiberty: "mode" };
 function admNorm(a) { a = a || {}; return { feat: Object.assign({}, a.feat), charte: Object.assign({}, ADM_DEF.charte, a.charte), liberty: LIBERTY.some(l => l[0] === a.liberty) ? a.liberty : "free", lastLiberty: a.lastLiberty === "imposed" ? "imposed" : "mode" }; }
 let ADM = (() => { try { return admNorm(JSON.parse(localStorage.getItem(ADKEY))); } catch (e) { return admNorm(null); } })();
-const feat = (k) => !ADM.feat || ADM.feat[k] !== false;
+const feat = (k) => k !== "styles" && (!ADM.feat || ADM.feat[k] !== false); /* styles Fil Rouge retirés : la charte DAM Studio s'applique à tous */
 function saveAdm() { try { localStorage.setItem(ADKEY, JSON.stringify(ADM)); } catch (e) {} if (GAS) save();
   // Avec la base partagée, la config vaut pour tout le monde (document cfg/admin, écrit par l’administrateur).
   if (db && isAdmin()) db.doc("cfg/admin").set(Object.assign({}, ADM, { updatedAt: new Date().toISOString(), by: myId || null })).catch(() => snack("Réglage non partagé : seuls les éditeurs du planning peuvent modifier la config de l’équipe.")); }
@@ -1339,7 +1338,6 @@ function admLook(box) {
     el("p", { class: "note", text: `Appliquée à tout le monde, selon la liberté choisie dans l’onglet suivant. Charte actuelle : ${label}.` }),
     el("p", { class: "ap-h", text: "Matière" }), el("div", { class: "mode-grid", style: { gridTemplateColumns: "repeat(2,minmax(0,1fr))" } }, glass),
     el("p", { class: "ap-h", text: "Thème" }), el("div", { class: "mode-grid", style: { gridTemplateColumns: "repeat(2,minmax(0,1fr))" } }, theme("a", "Sombre"), theme("light", "Lumineux")),
-    el("p", { class: "ap-h", text: "Style Fil Rouge" }), styles,
     el("div", { class: "row2", style: { marginTop: "12px" } }, el("button", { class: "btn ghost sm", onclick: () => {
       let s = {}; try { s = JSON.parse(localStorage.getItem("filrouge-da")) || {}; } catch (er) {}
       const t = uiMine().theme; setC({ glass: window.LG ? LG.get().on !== false : true, theme: ["a", "light", "cream", "custom"].includes(t) ? t : C.theme, style: s.id || "", pal: s.pal || "" }); } }, icon("content_copy"), "Reprendre mon apparence actuelle"))));
