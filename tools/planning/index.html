@@ -171,7 +171,11 @@ td.fold.busy{background:repeating-linear-gradient(-45deg,var(--red) 0 2px,transp
 .bk.cont{border-top-left-radius:0}
 .leave{position:absolute;inset:2px 3px;background:repeating-linear-gradient(90deg,var(--mid) 0 2px,transparent 2px 7px);opacity:.55;display:grid;place-items:center;font-size:10px;font-weight:900;color:var(--ink)}
 .leave span{background:var(--paper);padding:0 5px;opacity:1}
-.selbar{position:sticky;bottom:16px;margin:0 auto;width:max-content;max-width:calc(100% - 32px);display:flex;gap:12px;align-items:center;background:var(--band);color:var(--band-t);padding:8px 10px 8px 18px;box-shadow:inset 0 -3px 0 var(--red),0 10px 30px rgba(0,0,0,.35);z-index:10;font-weight:800;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+.selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));margin:0;width:max-content;max-width:calc(100vw - 24px);display:flex;flex-wrap:wrap;justify-content:center;gap:10px 12px;align-items:center;background:var(--band);color:var(--band-t);padding:8px 10px 8px 18px;box-shadow:inset 0 -3px 0 var(--red),0 10px 30px rgba(0,0,0,.35);z-index:2147482000;font-weight:800;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+.selbar{-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%)}
+:root[data-da-sombre] .selbar{background:color-mix(in srgb,var(--da-fond,#07090f) 84%,transparent)}
+.selbar .btn.opt{background:transparent;color:var(--band-t);border:1px dashed currentColor}
+@media print{.selbar{display:none!important}}
 .selbar .btn.ghost{color:var(--band-t)}
 
 /* listes / bibliothèques */
@@ -625,7 +629,7 @@ function okView(v) {
   return v;
 }
 function setView(v) { S.view = okView(v); S.sel.clear(); renderNav(); render(); $("#main").scrollTop = 0; }
-function render() { const v = okView(S.view); if (v !== S.view) { S.view = v; renderNav(); } ({ planning: renderPlanning, clients: renderClients, libs: renderLibs, team: renderTeam, mail: renderMail, interface: renderInterface, admin: renderAdmin, gate: renderGate, project: renderProject })[S.view](); }
+function render() { syncSelBar(); const v = okView(S.view); if (v !== S.view) { S.view = v; renderNav(); } ({ planning: renderPlanning, clients: renderClients, libs: renderLibs, team: renderTeam, mail: renderMail, interface: renderInterface, admin: renderAdmin, gate: renderGate, project: renderProject })[S.view](); }
 function hero(kicker, title, sub, actions) {
   return el("header", { class: "hero" }, el("div", { class: "hero-ink" }, el("span", { class: "kicker", text: kicker }), el("h1", { class: "h1", text: title }), sub ? el("p", { class: "sub", text: sub }) : null), el("div", { class: "stripe" }), actions ? el("div", { class: "hero-actions" }, el("div", { class: "row" }, actions)) : null);
 }
@@ -699,7 +703,7 @@ function renderPlanning() {
     }
   }
   const table = el("table", { class: "pl" }, thead, tbody);
-  const wrap = el("div", { class: "gridwrap", id: "gw" }, table, selBar());
+  const wrap = el("div", { class: "gridwrap", id: "gw" }, table); queueMicrotask(syncSelBar);
   view(hero("OUTILS COLLABORATIFS D’AGENCE", "Planning", "Dates en lignes (matin / après-midi), ressources en colonnes. Les réservations de plateau, véhicule et matériel se reportent dans leurs colonnes.", allow("clients") ? [el("button", { class: "btn", onclick: () => setView("clients") }, icon("person_add"), "Nouveau client")] : null), tb, wrap);
   wireSelection(table);
   if (igOn()) igLoad();
@@ -720,13 +724,20 @@ function cell(r, di, h) {
 }
 function selBar() {
   if (!S.sel.size || !feat("booking")) return null;
-  return el("div", { class: "selbar" }, `${S.sel.size} demi-journée${S.sel.size > 1 ? "s" : ""} sélectionnée${S.sel.size > 1 ? "s" : ""}`,
-    el("button", { class: "btn sm", onclick: () => openBooking([...S.sel]) }, icon("event_available"), "Réserver"),
-    el("button", { class: "btn ghost sm", onclick: () => { S.sel.clear(); renderPlanning(); } }, "Annuler la sélection"));
+  return el("div", { class: "selbar", role: "region", "aria-label": "Sélection en cours" }, el("span", { class: "selbar-n" }, `${S.sel.size} demi-journée${S.sel.size > 1 ? "s" : ""} sélectionnée${S.sel.size > 1 ? "s" : ""}`),
+    el("button", { class: "btn sm", onclick: () => openBooking([...S.sel], null, "conf") }, icon("event_available"), "Réserver"),
+    el("button", { class: "btn sm opt", onclick: () => openBooking([...S.sel], null, "opt") }, icon("event_upcoming"), "Prendre une option"),
+    el("button", { class: "btn ghost sm", onclick: () => { S.sel.clear(); renderPlanning(); } }, "Annuler"));
+}
+/* Barre de sélection fixe en surimpression : visible où que l'on soit dans le planning (posée sur la page, pas dans la grille qui défile). */
+function syncSelBar() {
+  document.querySelectorAll("body > .selbar").forEach(x => x.remove());
+  if (S.view !== "planning") return;
+  const nb = selBar(); if (nb) document.body.append(nb);
 }
 function refreshSel() {
   document.querySelectorAll("td.c").forEach(td => td.classList.toggle("sel", S.sel.has(td.dataset.k)));
-  const gw = $("#gw"); const old = gw.querySelector(".selbar"); if (old) old.remove(); const nb = selBar(); if (nb) gw.append(nb);
+  syncSelBar();
 }
 function selectDay(di, cols) {
   if (!feat("booking")) { snack("La réservation est désactivée par l’administrateur"); return; }
@@ -766,9 +777,9 @@ function wireSelection(table) {
 }
 
 /* ---------- module de réservation ---------- */
-function openBooking(keys, existing) {
+function openBooking(keys, existing, preset) {
   const dlg = $("#dlg");
-  const st = existing ? { ...existing.form } : { client: D.clients[0] ? D.clients[0].id : "", project: "", status: "opt", placeType: "studio", plateau: "", ext: "", vehicles: [], mats: [] };
+  const st = existing ? { ...existing.form } : { client: D.clients[0] ? D.clients[0].id : "", project: "", status: preset || "opt", placeType: "studio", plateau: "", ext: "", vehicles: [], mats: [] };
   if (!st.project) { const c = client(st.client); st.project = c && c.projects[0] ? c.projects[0].id : ""; }
   const hum = keys.map(k => k.split("|")).map(([rid, di, h]) => ({ r: resById(rid), di, h: +h }));
   const dates = [...new Set(hum.map(x => x.di + "|" + x.h))];
