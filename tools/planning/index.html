@@ -619,13 +619,13 @@ const VIEWS = [["planning", "Planning", "calendar_view_week"], ["clients", "Clie
 function renderNav() {
   const b = ([k, l, i]) => el("button", { class: "rail-btn", "aria-current": S.view === k ? "page" : null, onclick: () => setView(k) }, icon(i), el("span", { class: "l", text: l }));
   $("#nav").replaceChildren(...(gated() ? [] : VIEWS.filter(v => allow(v[0])).map(b)));
-  $("#nav2").replaceChildren(...[b(["interface", "Apparence", "palette"]), isAdmin() ? b(["admin", "Back-office", "admin_panel_settings"]) : null].filter(Boolean));
+  $("#nav2").replaceChildren(...[isAdmin() ? b(["admin", "Back-office", "admin_panel_settings"]) : null].filter(Boolean));
 }
 // Onglet affichable : respecte les services désactivés et le rôle administrateur.
 function okView(v) {
   if (gated()) return v === "interface" ? v : "gate";
-  if (v === "gate") v = "planning";
-  if (v === "admin" && !isAdmin()) v = "interface";
+  if (v === "gate" || v === "interface") v = "planning"; /* menu Apparence retiré : la charte vient de l'appli */
+  if (v === "admin" && !isAdmin()) v = "planning";
   if (v === "project" && !allow("project")) v = "clients";
   if (VIEWS.some(x => x[0] === v) && !allow(v)) v = (VIEWS.find(x => allow(x[0])) || ["interface"])[0];
   return v;
@@ -1301,7 +1301,7 @@ function renderInterface() {
    Back-office (réservé à l'administrateur)
    ============================================================ */
 function renderAdmin() {
-  if (!isAdmin()) { setView("interface"); return; }
+  if (!isAdmin()) { setView("planning"); return; }
   const tabs = [["team", "Comptes et accès", "group"], ["svc", "Services et fonctionnalités", "toggle_on"], ["look", "Charte visuelle", "palette"], ["free", "Liberté des utilisateurs", "lock_open"], ["data", "Données et sauvegarde", "cloud_upload"]];
   if (!tabs.some(t => t[0] === S.admTab)) S.admTab = "team";
   const bar = el("div", { class: "adm-tabs2", role: "tablist" }, tabs.map(([k, l, ic]) => el("button", { class: "chip", role: "tab", "aria-selected": String(S.admTab === k), "aria-pressed": String(S.admTab === k), onclick: () => { S.admTab = k; renderAdmin(); } }, icon(ic), l)));
