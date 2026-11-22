@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Outils collaboratifs d&#39;agence</title>
+<script src="core.js" data-mod="hub"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#eef1f7;--mid:rgba(238,241,247,.62);--line:rgba(255,255,255,.14);--glass:rgba(255,255,255,.075);--glass2:rgba(255,255,255,.12);--blur:22px;--acc:#7cc4ff;--acc2:#b28cff;--ok:#4fdc9b;--warn:#ffc35a;--bad:#ff6b7a;--r:20px;color-scheme:dark}
+html[data-glass="off"]{--glass:#141824;--glass2:#141824;--blur:0px}
+html[data-glass="soft"]{--blur:10px}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font:14.5px/1.45 Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:#07090f;overflow-x:hidden;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+/* fond vivant */
+#bg{position:fixed;inset:-10%;z-index:0;pointer-events:none;filter:blur(70px);transition:transform .25s ease-out}
+#bg i{position:absolute;border-radius:50%;opacity:.55;animation:float 22s ease-in-out infinite alternate}
+#bg i:nth-child(1){width:46vw;height:46vw;left:2%;top:4%;background:#2b5cff}
+#bg i:nth-child(2){width:52vw;height:52vw;right:-6%;top:10%;background:#a43cff;animation-duration:28s}
+#bg i:nth-child(3){width:40vw;height:40vw;left:28%;bottom:-8%;background:#00c2b8;animation-duration:25s}
+#bg i:nth-child(4){display:none}
+@keyframes float{to{transform:translate(6vw,-4vh) scale(1.12)}}
+html[data-bg="off"] #bg i{animation:none}
+@media (prefers-reduced-motion:reduce){#bg i{animation:none}}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:28px 20px 90px}
+.glass{background:linear-gradient(150deg,var(--glass),var(--glass2));border:1px solid var(--line);border-radius:var(--r);
+  -webkit-backdrop-filter:blur(var(--blur)) saturate(1.6);backdrop-filter:blur(var(--blur)) saturate(1.6);
+  box-shadow:0 20px 60px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.18)}
+header.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+h1{font:400 clamp(34px,5vw,54px)/1.02 "Instrument Serif",Georgia,serif;margin:0;letter-spacing:-.01em}h1 i{color:#b9dcff}
+.sub{color:var(--mid);margin:6px 0 0}
+.btn{appearance:none;border:1px solid var(--line);background:linear-gradient(150deg,var(--glass),var(--glass2));color:var(--ink);font:700 13.5px Manrope,system-ui,sans-serif;
+  padding:10px 16px;border-radius:13px;cursor:pointer;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.btn:hover{filter:brightness(1.05)}.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.mods{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:26px;perspective:900px}
+.mod{display:block;padding:20px;color:inherit;text-decoration:none;transition:transform .2s ease,box-shadow .2s;transform-style:preserve-3d;min-height:150px}
+.mod:hover{box-shadow:0 26px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.22);border-color:rgba(255,255,255,.26)}
+.mod .ic{font-size:26px;width:46px;height:46px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0d14;margin-bottom:14px;transform:translateZ(30px);box-shadow:0 6px 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.6)}
+.mod h2{margin:0 0 4px;font-size:18px;font-weight:800;transform:translateZ(20px)}
+.mod p{margin:0;color:var(--mid);font-size:13.5px}
+.mod .k{margin-top:12px;font-weight:700;font-size:13.5px}
+.grid2{display:grid;grid-template-columns:1.5fr 1fr;gap:18px}
+@media (max-width:860px){.grid2{grid-template-columns:1fr}}
+section.card{padding:20px;margin-bottom:18px}
+section.card h3{margin:0 0 4px;font-size:18px}
+section.card .note{color:var(--mid);font-size:13px;margin:0 0 14px}
+.search{width:100%;padding:11px 14px;border-radius:14px;border:1px solid var(--line);background:var(--glass);color:var(--ink);font:inherit;margin-bottom:12px;outline:none}
+.pj{padding:13px 4px;border-top:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.pj:first-of-type{border-top:0}
+.pj b{font-size:15px}.pj .meta{color:var(--mid);font-size:12.5px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:5px 10px;border-radius:999px;background:var(--glass2);border:1px solid var(--line);color:var(--ink);text-decoration:none;white-space:nowrap}
+.chip.warn{color:var(--warn)}.chip.bad{color:var(--bad)}
+.day{margin-bottom:12px}.day h4{margin:0 0 6px;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mid)}
+.ev{display:flex;gap:10px;font-size:13.5px;padding:6px 0}.ev .d{width:9px;height:9px;border-radius:50%;margin-top:6px;flex:none}
+.empty{color:var(--mid);font-size:13.5px;padding:8px 0}
+.err{padding:14px 16px;border-left:4px solid var(--bad);margin-bottom:18px}
+dialog{border:0;padding:0;background:transparent;color:var(--ink);max-width:min(520px,94vw);width:100%}
+dialog::backdrop{background:rgba(10,10,20,.35);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.dlg{padding:22px}.dlg h3{margin:0 0 14px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.row select,.fm input,.fm select{font:inherit;padding:9px 11px;border-radius:12px;border:1px solid var(--line);background:#141824;color:var(--ink)}
+.btn.pri{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0d14;border:0;box-shadow:0 8px 24px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.5)}
+.btn.sm{padding:7px 11px;font-size:12px;border-radius:10px}
+.acc{padding:11px 4px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.acc:first-child{border-top:0}.acc b{font-size:14px}.acc .meta{color:var(--mid);font-size:12px}
+.tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:99px;border:1px solid var(--line)}
+.tag.team{color:var(--acc)}.tag.client{color:var(--acc2)}.tag.inv{color:var(--warn)}.tag.rev{color:var(--bad)}
+.fm{display:grid;gap:10px}.fm label{font-size:12px;font-weight:700;color:var(--mid);display:grid;gap:5px}
+.fm .mods2{display:flex;gap:12px;flex-wrap:wrap;font-size:13px}.fm .mods2 label{display:flex;gap:6px;align-items:center;font-weight:600;color:var(--ink)}
+pre.inv{white-space:pre-wrap;font:12.5px/1.5 Manrope,system-ui,sans-serif;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:12px;max-height:260px;overflow:auto}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div id="bg" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Outils collaboratifs <i>d'agence</i></h1>
+      <p class="sub" id="hello">Planning, inventaire, droit à l'image, IA Studio et DAM Studio, reliés par projet.</p>
+    </div>
+    <button class="btn" id="setBtn" type="button">Réglages</button>
+  </header>
+  <div id="msg"></div>
+  <nav class="mods" aria-label="Outils">
+    <a class="mod glass" href="planning.html" data-tilt><div class="ic">▦</div><h2>Planning</h2><p>Équipe, studios, véhicules et matériel, jour par jour.</p><div class="k" id="kPlan">…</div></a>
+    <a class="mod glass" href="inventaire.html" data-tilt><div class="ic">▣</div><h2>Inventaire</h2><p>Matériel et ordinateurs, emprunts, tickets.</p><div class="k" id="kInv">…</div></a>
+    <a class="mod glass" href="droit.html" data-tilt><div class="ic">✎</div><h2>Droit à l'image</h2><p>Autorisations signées, échéances, rappels.</p><div class="k" id="kDroit">…</div></a>
+    <a class="mod glass" href="studio.html" data-tilt><div class="ic">✦</div><h2>IA Studio</h2><p>Scénario, storyboard, prévis 3D, génération.</p><div class="k" id="kIa">…</div></a>
+    <a class="mod glass" href="dam.html" data-tilt><div class="ic">◧</div><h2>DAM Studio</h2><p>Fichiers clients, annotations, versions, validation.</p><div class="k" id="kDam">…</div></a>
+  </nav>
+  <div class="grid2">
+    <section class="card glass" aria-labelledby="hPj">
+      <h3 id="hPj">Projets</h3>
+      <p class="note">Un projet regroupe ses réservations, son matériel, son storyboard IA, ses fichiers DAM et ses autorisations (rattachés par nom de projet).</p>
+      <label class="sr" for="q">Rechercher un projet</label>
+      <input class="search" id="q" type="search" placeholder="Rechercher un projet ou un client">
+      <div id="pjs"><div class="empty">Chargement…</div></div>
+    </section>
+    <div>
+      <section class="card glass" aria-labelledby="hUp">
+        <h3 id="hUp">Les 14 prochains jours</h3>
+        <p class="note">Réservations, sorties de matériel, phases de versions DAM et fins d'autorisations.</p>
+        <div id="up"><div class="empty">Chargement…</div></div>
+      </section>
+      <section class="card glass" aria-labelledby="hAd">
+        <h3 id="hAd">Comptes et accès</h3>
+        <p class="note">Une seule connexion pour tous les outils : e-mail et mot de passe, sur invitation. Équipe : tous les outils. Clients : DAM Studio, et Droit à l'image si vous l'ouvrez.</p>
+        <div id="me" class="meta" style="margin-bottom:10px"></div>
+        <div id="adm" class="empty">Chargement…</div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<dialog id="dlg"><div class="dlg glass">
+  <h3>Réglages</h3>
+  <div class="row"><label for="sGlass">Liquid Glass</label><select id="sGlass"><option value="on">Verre dépoli</option><option value="soft">Verre léger</option><option value="off">Désactivé</option></select></div>
+  <div class="row"><label for="sBg">Fond vivant</label><select id="sBg"><option value="on">Animé</option><option value="off">Fixe</option></select></div>
+  <div class="row"><label for="sCharte">Charte DAM Studio sur tous les outils</label><select id="sCharte"><option value="on">Activée</option><option value="off">Désactivée (style propre à chaque outil)</option></select></div>
+  <div class="row"><label for="sPar">Parallaxe et relief 3D</label><select id="sPar"><option value="on">Activés</option><option value="off">Désactivés</option></select></div>
+  <p class="note" style="color:var(--mid);font-size:13px;margin:14px 0">Ces réglages valent pour cet appareil. Chaque outil garde son propre menu Apparence et sa sauvegarde quotidienne (dossier réglable, réimport d'une ancienne sauvegarde).</p>
+  <button class="btn" type="button" id="dlgClose">Fermer</button>
+</div></dialog>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const N = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const today = iso(new Date());
+const plus = n => { const d = new Date(); d.setDate(d.getDate() + n); return iso(d); };
+const fmt = s => { if (!s) return ""; const d = new Date(s + "T12:00:00"); return isNaN(d) ? s : d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }); };
+
+/* ---------- réglages d'apparence (par appareil) ---------- */
+const PK = "hub-look";
+let look = { glass: "on", bg: "on", par: "on" };
+try { Object.assign(look, JSON.parse(localStorage.getItem(PK)) || {}); } catch (e) {}
+function applyLook() { const h = document.documentElement; h.dataset.glass = look.glass; h.dataset.bg = look.bg; $("#sGlass").value = look.glass; $("#sBg").value = look.bg; $("#sPar").value = look.par; }
+["sGlass", "sBg", "sPar"].forEach(id => $("#" + id).addEventListener("change", e => { look[{ sGlass: "glass", sBg: "bg", sPar: "par" }[id]] = e.target.value; try { localStorage.setItem(PK, JSON.stringify(look)); } catch (er) {} applyLook(); }));
+$("#setBtn").addEventListener("click", () => $("#dlg").showModal());
+$("#dlgClose").addEventListener("click", () => $("#dlg").close());
+applyLook();
+/* parallaxe + relief */
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+addEventListener("pointermove", e => {
+  if (look.par !== "on" || reduce) return;
+  const x = e.clientX / innerWidth - .5, y = e.clientY / innerHeight - .5;
+  $("#bg").style.transform = `translate(${x * -30}px,${y * -30}px)`;
+});
+document.querySelectorAll("[data-tilt]").forEach(c => {
+  c.addEventListener("pointermove", e => { if (look.par !== "on" || reduce || e.pointerType !== "mouse") return; const r = c.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; c.style.transform = `rotateY(${x * 10}deg) rotateX(${y * -10}deg) translateY(-3px)`; });
+  c.addEventListener("pointerleave", () => { c.style.transform = ""; });
+});
+
+/* ---------- données des 4 outils ---------- */
+const D = { plan: null, bk: [], invP: [], items: [], ia: [], ct: [], dam: [], roles: {} };
+let db = null;
+function msg(t) { $("#msg").innerHTML = t ? `<div class="err glass">${esc(t)}</div>` : ""; }
+(async () => {
+  if (!window.CORE) { msg("Ouvrez cette page depuis Claude pour accéder aux outils de l'agence."); paintEmpty(); return; }
+  const timer = setTimeout(() => msg("Les données mettent du temps à arriver : vérifiez votre connexion."), 10000);
+  db = await CORE.raw("db");
+  const user = await CORE.raw("user");
+  if (!db) { clearTimeout(timer); msg("Connectez-vous à Claude pour voir les données de l'agence."); paintEmpty(); return; }
+  const ok = () => { clearTimeout(timer); msg(""); paint(); };
+  const sub = (ref, fn) => { try { ref.onSnapshot(s => { fn(s); ok(); }, () => {}); } catch (e) {} };
+  sub(db.doc("m/plan/st/main"), d => { D.plan = d.exists ? d.data() : null; });
+  sub(db.collection("m/plan/bk"), q => { D.bk = q.docs.flatMap(d => (d.data() || {}).list || []); });
+  sub(db.collection("m/inv/projects"), q => { D.invP = q.docs.map(d => ({ id: d.id, ...d.data() })); });
+  sub(db.collection("m/inv/items"), q => { D.items = q.docs.map(d => ({ id: d.id, ...d.data() })); });
+  sub(db.collection("m/ia/projects"), q => { D.ia = q.docs.map(d => ({ id: d.id, ...d.data() })); });
+  sub(db.collection("m/droit/ct"), q => { const out = []; q.docs.forEach(d => { const o = d.data() || {}; for (const [cid, c] of Object.entries(o)) if (c && typeof c === "object" && c.project) out.push({ id: cid, ...c }); }); D.ct = out; });
+  sub(db.collection("m/dam/projects"), q => { D.dam = q.docs.map(d => ({ id: d.id, ...d.data() })); });
+  sub(db.collection("m/inv/roles"), q => { D.roles.inv = q.docs.filter(d => (d.data() || {}).role === "admin").map(d => d.id); });
+  sub(db.collection("m/plan/roles"), q => { D.roles.plan = q.docs.filter(d => (d.data() || {}).role === "admin").map(d => d.id); });
+})();
+
+function paintEmpty() { ["kPlan", "kInv", "kDroit", "kIa", "kDam"].forEach(k => $("#" + k).textContent = ""); $("#pjs").innerHTML = $("#up").innerHTML = `<div class="empty">Indisponible hors de Claude.</div>`; }
+const out = i => i.status === "tournage" || i.status === "pret";
+function projects() {
+  const P = {};
+  const get = (name, client) => { const k = N(name); if (!k) return null; if (!P[k]) P[k] = { name: String(name).trim(), client: client || "", plan: 0, dates: [], inv: 0, ia: null, dam: null, ct: [], go: {} }; if (client && !P[k].client) P[k].client = client; return P[k]; };
+  const pl = D.plan || {}, byPid = {};
+  (pl.clients || []).forEach(c => (c.projects || []).forEach(p => { byPid[p.id] = get(p.name, c.name); }));
+  D.bk.forEach(b => { const p = byPid[b.project]; if (p) { p.plan++; p.dates.push(b.date); } });
+  D.invP.forEach(p => { const x = get(p.name); if (x) { if (p.start) x.dates.push(p.start); if (p.end) x.dates.push(p.end); } });
+  D.items.filter(out).forEach(i => { const x = get(i.project); if (x) x.inv++; });
+  D.ia.forEach(p => { const x = get(p.project || p.name, p.client); if (x) x.ia = p; });
+  D.ct.forEach(c => { const x = get(c.project, c.brand); if (x) x.ct.push(c); });
+  D.dam.forEach(d => { const x = get(d.name, d.client); if (x) { x.dam = d; if (d.from) x.dates.push(d.from); if (d.to) x.dates.push(d.to); } });
+  return Object.values(P).map(p => { const d = p.dates.filter(Boolean).sort(); p.from = d[0] || ""; p.to = d[d.length - 1] || ""; return p; })
+    .sort((a, b) => (b.to || "").localeCompare(a.to || "") || a.name.localeCompare(b.name, "fr"));
+}
+function paint() {
+  const bkWeek = D.bk.filter(b => b.date >= today && b.date <= plus(6));
+  $("#kPlan").textContent = D.plan ? `${new Set(bkWeek.map(b => b.link || b.id)).size} réservation(s) cette semaine` : "Planning à configurer";
+  const o = D.items.filter(out);
+  $("#kInv").textContent = D.items.length ? `${o.length} sorti(s) sur ${D.items.length}` : "Aucun matériel";
+  const act = D.ct.filter(c => !c.end || c.end >= today), soon = act.filter(c => c.end && c.end <= plus(60));
+  $("#kDroit").textContent = D.ct.length ? `${act.length} actif(s)` + (soon.length ? ` · ${soon.length} fin < 2 mois` : "") : "Aucune autorisation";
+  $("#kIa").textContent = D.ia.length ? `${D.ia.length} projet(s) partagé(s)` : "Aucun projet partagé";
+  const damOpen = D.dam.filter(d => !d.closed), damTodo = damOpen.reduce((k, d) => k + (d.todo || 0), 0);
+  $("#kDam").textContent = D.dam.length ? `${damOpen.length} en cours` + (damTodo ? ` · ${damTodo} correction(s)` : "") : "Ouvrir pour synchroniser";
+  paintProjects(); paintUp(); paintAdm();
+}
+function paintProjects() {
+  const q = N($("#q").value), list = projects().filter(p => !q || N(p.name + " " + p.client).includes(q));
+  if (!list.length) { $("#pjs").innerHTML = `<div class="empty">${q ? "Aucun projet trouvé." : "Aucun projet pour l'instant : créez-en un dans le Planning, l'Inventaire, l'IA Studio ou une autorisation."}</div>`; return; }
+  $("#pjs").innerHTML = list.slice(0, 80).map(p => {
+    const exp = p.ct.filter(c => c.end && c.end < today).length, soon = p.ct.filter(c => c.end && c.end >= today && c.end <= plus(60)).length;
+    const chips = [
+      p.plan ? `<a class="chip" href="planning.html">▦ ${p.plan} demi-journée(s)</a>` : "",
+      p.inv ? `<a class="chip" href="inventaire.html">▣ ${p.inv} matériel sorti</a>` : "",
+      p.ia ? `<a class="chip" href="studio.html">✦ Storyboard IA</a>` : "",
+      p.dam ? `<a class="chip ${p.dam.todo ? "warn" : ""}" href="dam.html">◧ ${p.dam.closed ? "Validé" : esc(p.dam.phase || "DAM")} · ${p.dam.validated}/${p.dam.assets} validé(s)${p.dam.todo ? ` · ${p.dam.todo} à corriger` : ""}</a>` : "",
+      p.ct.length ? `<a class="chip ${exp ? "bad" : soon ? "warn" : ""}" href="droit.html">✎ ${p.ct.length} autorisation(s)${exp ? ` · ${exp} expirée(s)` : soon ? ` · ${soon} bientôt` : ""}</a>` : ""
+    ].join("");
+    const when = p.from ? (p.from === p.to ? fmt(p.from) : `${fmt(p.from)} → ${fmt(p.to)}`) : "";
+    return `<div class="pj"><div><b>${esc(p.name)}</b><div class="meta">${esc([p.client, when].filter(Boolean).join(" · "))}</div></div><div class="chips">${chips}</div></div>`;
+  }).join("");
+}
+$("#q").addEventListener("input", paintProjects);
+function paintUp() {
+  const end = plus(13), ev = [];
+  const pl = D.plan || {}, res = {}, pj = {}, cl = {};
+  (pl.res || []).forEach(r => res[r.id] = r);
+  (pl.clients || []).forEach(c => { cl[c.id] = c; (c.projects || []).forEach(p => pj[p.id] = p); });
+  const seen = {};
+  D.bk.filter(b => b.date >= today && b.date <= end).forEach(b => {
+    const k = b.date + (b.link || b.id); if (seen[k]) { seen[k].n++; return; }
+    const c = cl[b.client], p = pj[b.project];
+    seen[k] = { date: b.date, color: (c && c.color) || "#888", n: 1, t: () => `${p ? p.name : "Réservation"}${c ? " · " + c.name : ""}${seen[k].n > 1 ? ` (${Math.ceil(seen[k].n / 2)} ressource(s))` : res[b.rid] ? " · " + res[b.rid].name : ""}` };
+    ev.push(seen[k]);
+  });
+  D.items.filter(out).forEach(i => {
+    const nm = i.name || i.model || "Matériel";
+    if (i.startDate >= today && i.startDate <= end) ev.push({ date: i.startDate, color: "#6c7bff", t: () => `Sortie : ${nm}${i.project ? " · " + i.project : ""}` });
+    if (i.dueDate && i.dueDate >= today && i.dueDate <= end) ev.push({ date: i.dueDate, color: "#2fd3b0", t: () => `Retour prévu : ${nm}${i.holder ? " · " + i.holder : ""}` });
+  });
+  D.ct.filter(c => c.end && c.end >= today && c.end <= end).forEach(c => ev.push({ date: c.end, color: "#c62828", t: () => `Fin d'autorisation : ${c.project}${c.brand ? " · " + c.brand : ""}` }));
+  D.dam.filter(d => !d.closed).forEach(d => (d.phases || []).forEach(ph => { if (ph.start >= today && ph.start <= end) ev.push({ date: ph.start, color: "#b28cff", t: () => `DAM · ${d.name} : début ${ph.name}${d.client ? " · " + d.client : ""}` }); }));
+  if (!ev.length) { $("#up").innerHTML = `<div class="empty">Rien de prévu sur les 14 prochains jours.</div>`; return; }
+  const by = {}; ev.forEach(e => (by[e.date] = by[e.date] || []).push(e));
+  $("#up").innerHTML = Object.keys(by).sort().map(d => `<div class="day"><h4>${d === today ? "Aujourd'hui" : esc(fmt(d))}</h4>${by[d].map(e => `<div class="ev"><span class="d" style="background:${esc(e.color)}"></span><span>${esc(e.t())}</span></div>`).join("")}</div>`).join("");
+}
+function paintAdm() {
+  const A = window.JP_AUTH, u = A && A.user; if (!u) return;
+  $("#me").innerHTML = `Connecté : <b>${esc(u.name)}</b> · ${esc(u.email)} · ${u.role === "admin" ? "administrateur" : u.kind === "team" ? "équipe" : "client"}`;
+  $("#adm").innerHTML = `<div class="chips">${A.isAdmin() ? `<button class="btn pri sm" type="button" id="accBtn">Gérer les comptes</button>` : ""}<button class="btn sm" type="button" id="outBtn">Se déconnecter</button></div>`;
+  $("#outBtn").onclick = () => A.logout();
+  if ($("#accBtn")) $("#accBtn").onclick = () => A.manage();
+}
+if (window.JP_AUTH) JP_AUTH.onReady(u => { if (u) $("#hello").textContent = `Bonjour ${u.name.split(" ")[0]} — vos outils, reliés par projet.`; paintAdm(); });
+/* charte DAM sur tous les outils (réglage par appareil) */
+try { $("#sCharte").value = localStorage.getItem("jp-charte") === "off" ? "off" : "on"; } catch (e) {}
+$("#sCharte").addEventListener("change", e => { try { localStorage.setItem("jp-charte", e.target.value); } catch (er) {} });
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "suite": {
+    "name": "Outils collaboratifs d'agence",
+    "artifact": "a51ad015-e9e3-4ced-8cfd-4a0a71db37b9",
+    "url": "https://claude.ai/artifact/MPVgdXcoVxFMHxW51zAcZN"
+  },
+  "tools": [
+    { "id": "plan",  "dir": "planning",   "suite_file": "planning.html",   "name": "Planning d'agence",
+      "artifact": "466a41b3-0f49-4e15-b290-cbb6bc74d2ba", "url": "https://claude.ai/artifact/9hKVabKTZzknRYFSkv9XX7" },
+    { "id": "inv",   "dir": "inventaire", "suite_file": "inventaire.html", "name": "Inventaire matériel location",
+      "artifact": "de828f29-545f-40f9-aaed-0e71da62e3d3", "url": "https://claude.ai/artifact/UUdtZP8ApezMdsQpsdu4Ga" },
+    { "id": "droit", "dir": "droit",      "suite_file": "droit.html",      "name": "Droit à l'image",
+      "artifact": "fb3f1f7f-76a0-4ecd-8e94-a099f6b97669", "url": "https://claude.ai/artifact/Y2T6SBRVZjT12CCBvm1aNc" },
+    { "id": "ia",    "dir": "ia-studio",  "suite_file": "studio.html",     "name": "STUDIO GENERATE IA BETA",
+      "artifact": "5f586a84-921a-45c1-8be5-94e6d9c53a89", "url": "https://claude.ai/artifact/Cmsa4toYe4PBBA7g3gzXzG" },
+    { "id": "dam",   "dir": "dam-studio", "suite_file": "dam.html",        "name": "DAM Studio — M la créative",
+      "artifact": "42c15222-80b1-4ee0-bda4-2fb163aa4621", "url": "https://claude.ai/artifact/9F7AX8QdDY2eLbar9jAdZA" }
+  ]
+}

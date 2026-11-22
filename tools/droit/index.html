@@ -1,0 +1,1097 @@
+<!doctype html><html><head>
+<script src="core.js" data-mod="droit"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Droit à l&#39;image</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* Layout : barre d'onglets en haut, une colonne de travail ; le contrat se lit comme un acte (papier, filet, sceau). */
+:root{
+  --paper:#f4f5f7; --sheet:#ffffff; --ink:#151a2d; --muted:#5b6275; --line:#dfe2ea;
+  --accent:#2a3fb8; --accent-ink:#ffffff; --seal:#9b1c31;
+  --ok:#1f7a4d; --ok-bg:#e3f3ea; --warn:#9a5b00; --warn-bg:#fbefd9; --bad:#a3202f; --bad-bg:#f9e3e5; --idle-bg:#eceef3;
+  --display:"Newsreader",Georgia,"Times New Roman",serif; --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#10131c; --sheet:#181c28; --ink:#e8eaf2; --muted:#9aa1b5; --line:#2a3042;
+  --accent:#8c9cff; --accent-ink:#0e1220; --seal:#e0687b;
+  --ok:#6fd3a0; --ok-bg:#163326; --warn:#f0bb5e; --warn-bg:#3a2c12; --bad:#ff8a96; --bad-bg:#3b1820; --idle-bg:#232838; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#10131c; --sheet:#181c28; --ink:#e8eaf2; --muted:#9aa1b5; --line:#2a3042;
+  --accent:#8c9cff; --accent-ink:#0e1220; --seal:#e0687b;
+  --ok:#6fd3a0; --ok-bg:#163326; --warn:#f0bb5e; --warn-bg:#3a2c12; --bad:#ff8a96; --bad-bg:#3b1820; --idle-bg:#232838; color-scheme:dark;}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--body)}
+h1,h2,h3{font-family:var(--display);font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:26px} h2{font-size:21px} h3{font-size:17px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;padding:14px max(16px,4vw);border-bottom:1px solid var(--line);background:var(--sheet)}
+.brand{display:flex;gap:10px;align-items:center}
+.seal{width:30px;height:30px;border-radius:50%;border:2px solid var(--seal);display:grid;place-items:center;color:var(--seal);font:600 13px var(--display)}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{border:0;background:none;padding:8px 12px;border-radius:8px;cursor:pointer;color:var(--muted);font-weight:500}
+nav button[aria-current="page"]{background:var(--idle-bg);color:var(--ink)}
+main{max-width:980px;margin:0 auto;padding:24px max(16px,4vw) 64px;display:grid;gap:20px}
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:20px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grow{flex:1}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.btn{border:1px solid var(--line);background:var(--sheet);padding:9px 14px;border-radius:8px;cursor:pointer;font-weight:500}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+label.f{display:grid;gap:5px;font-size:13px;font-weight:500;color:var(--muted)}
+label.f input,label.f select,label.f textarea{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:9px 10px;color:var(--ink);font-size:15px;font-weight:400}
+textarea{resize:vertical;min-height:70px}
+fieldset{border:1px solid var(--line);border-radius:10px;padding:14px;margin:0;display:grid;gap:12px}
+legend{padding:0 6px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chk{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:14px}
+.chk input{margin:0}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.idle{background:var(--idle-bg);color:var(--muted)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--muted);font-size:12.5px;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th button{all:unset;cursor:pointer} th button:focus-visible{outline:2px solid var(--accent)}
+td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr.click{cursor:pointer} tr.click:hover td{background:var(--paper)}
+.tablewrap{overflow-x:auto}
+.num{font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:13px}
+.deed{border-left:3px solid var(--seal);padding-left:16px;display:grid;gap:8px;max-width:68ch}
+.deed p{margin:0}
+.parties{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.party{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:6px}
+.party .role{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.party img{max-width:100%;height:56px;object-fit:contain;background:#fff;border-radius:6px}
+canvas.pad{width:100%;height:150px;border:1px dashed var(--muted);border-radius:8px;background:#fff;touch-action:none;cursor:crosshair}
+.search{position:relative}
+.hits{position:absolute;z-index:5;left:0;right:0;top:100%;background:var(--sheet);border:1px solid var(--line);border-radius:8px;margin-top:4px;max-height:220px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.hits button{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 10px;cursor:pointer}
+.hits button:hover,.hits button:focus{background:var(--paper)}
+.picked{display:flex;gap:8px;align-items:center;font-weight:500}
+.banner{border:1px solid var(--line);border-left:3px solid var(--warn);background:var(--sheet);border-radius:10px;padding:12px 14px;font-size:14px}
+.err{color:var(--bad);font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:14px}
+.stat b{display:block;font:600 26px var(--display)}
+ul.plain{margin:0;padding-left:18px;display:grid;gap:6px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--sheet);color:var(--ink);max-width:560px;width:calc(100% - 32px);padding:20px}
+dialog::backdrop{background:rgba(10,12,20,.45)}
+/* ---------- Apparence et Back-office ---------- */
+.ap-h{margin:18px 0 8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.ap-h:first-of-type{margin-top:6px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.tile{display:flex;flex-direction:column;gap:5px;align-items:flex-start;text-align:left;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--sheet);cursor:pointer}
+.tile i{display:block;width:100%;height:34px;border-radius:6px;border:1px solid rgba(128,128,128,.35)}
+.tile b{font-weight:600;font-size:13.5px}.tile small{font-size:11.5px;color:var(--muted)}
+.tile[aria-pressed="true"]{outline:2px solid var(--accent);outline-offset:1px}
+.tile:disabled{cursor:not-allowed;opacity:.55}
+.tile:disabled[aria-pressed="true"]{opacity:1}
+.pals{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pal{display:flex;padding:3px;border-radius:8px;border:1px solid var(--line);background:var(--sheet);cursor:pointer}
+.pal i{display:block;width:17px;height:17px}
+.cps{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}.cps label{display:flex;align-items:center;gap:6px;font-size:13px}
+.cps input{width:38px;height:28px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.rng{display:grid;grid-template-columns:150px 1fr 56px;gap:10px;align-items:center;margin:8px 0;font-size:14px}
+.rng input{width:100%;accent-color:var(--accent)}.rng b{text-align:right;font-variant-numeric:tabular-nums}
+details.fine{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+details.fine summary{cursor:pointer;font-weight:600;min-height:36px;display:flex;align-items:center}
+.lock{border-left:3px solid var(--accent);padding:8px 12px;border-radius:8px;background:var(--idle-bg);font-size:13.5px}
+.feat{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.feat .d{grid-column:2;font-size:13px;color:var(--muted)}
+.switch{position:relative;display:inline-flex;align-items:center;cursor:pointer}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch .tr{width:46px;height:28px;border-radius:999px;background:var(--idle-bg);border:1px solid var(--line);position:relative;flex:none}
+.switch .tr i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:left .15s}
+.switch input:checked+.tr{background:var(--accent);border-color:var(--accent)}
+.switch input:checked+.tr i{left:21px}
+.switch input:focus-visible+.tr{outline:2px solid var(--accent);outline-offset:2px}
+.radio{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
+.radio input{margin-top:3px;accent-color:var(--accent)}
+.radio b{display:block}
+@media (max-width:560px){.rng{grid-template-columns:1fr 56px}.rng span{grid-column:1/-1}}
+.grid2{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+label.f{min-width:0}label.f select,label.f input{min-width:0;width:100%;max-width:100%}
+.bo-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.bo-tabs button{border:1px solid var(--line);background:var(--sheet);border-radius:999px;padding:8px 14px;font-weight:600;cursor:pointer}
+.bo-tabs button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.badge-n{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--bad);color:#fff;font:600 12px var(--body);vertical-align:2px}
+.accrow{border:1px solid var(--line);border-radius:10px;padding:12px;display:grid;gap:8px}
+.accrow .e{font-size:13px;color:var(--muted);word-break:break-all}
+.acc-wrap{overflow-x:auto}
+.acc-list{min-width:720px;display:flex;flex-direction:column}
+.acc-row{display:grid;grid-template-columns:minmax(170px,1.6fr) 150px repeat(6,62px) auto;gap:6px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.acc-row.head{border-top:0;font-size:11.5px;color:var(--muted);font-weight:600}
+.acc-h{text-align:center;line-height:1.15}
+.acc-who b{display:block;font-size:14px}.acc-who em{font-style:normal;font-size:12px;color:var(--muted);display:block;word-break:break-all}
+.acc-row select{border:1px solid var(--line);background:var(--paper);border-radius:8px;padding:6px 8px;color:var(--ink);font-size:13px;width:100%}
+.acc-c{display:flex;justify-content:center;align-items:center;gap:8px}
+.acc-c input{width:20px;height:20px;accent-color:var(--accent)}
+.acc-mods{display:contents}.acc-l{display:none}
+.acc-a{display:flex;gap:4px;flex-wrap:wrap}
+.mini{border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:5px 8px;font-size:12px;font-weight:600;cursor:pointer}
+@media (max-width:760px){
+  .acc-wrap{overflow:visible}.acc-list{min-width:0}.acc-row.head{display:none}
+  .acc-row{display:block;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+  .acc-who{margin-bottom:8px}.acc-row select{margin-bottom:10px}
+  .acc-mods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 12px}
+  .acc-c{justify-content:flex-start}.acc-l{display:block;font-style:normal;font-size:13px}
+  .acc-a{margin-top:10px}
+}
+
+/* ---------- Système design Fil Rouge (10 styles) : chaque style donne fond, texte, accent ---------- */
+:root[data-da]{--paper:var(--da-fond)!important;--ink:var(--da-texte)!important;--accent:var(--da-accent)!important;--seal:var(--da-accent)!important;--accent-ink:var(--da-on,#fff)!important;
+  --sheet:var(--da-card,color-mix(in srgb,var(--da-fond) 93%,var(--da-texte)))!important;
+  --muted:color-mix(in srgb,var(--da-texte) 64%,var(--da-fond))!important;--line:var(--da-bd,color-mix(in srgb,var(--da-texte) 18%,var(--da-fond)))!important;
+  --idle-bg:color-mix(in srgb,var(--da-texte) 9%,var(--da-fond))!important;--display:var(--da-titre)!important;--body:var(--da-corps)!important}
+:root[data-da] body{background:var(--da-decor,var(--da-fond))!important;background-attachment:fixed!important}
+:root[data-da] :is(.card,.stat,.party,dialog){box-shadow:var(--da-ombre,none)}
+:root[data-da][data-da-rond] :is(.card,.stat,.party,dialog,.banner){border-radius:var(--da-rayon,16px)!important}
+:root[data-da][data-da-rond] .btn{border-radius:var(--da-rayon-btn,99px)!important}
+:root[data-da] :is(h1,h2){letter-spacing:var(--da-titre-espace,normal)}
+:root[data-da="cockpit"]{--da-titre:"Tektur","Arial Narrow",sans-serif;--da-corps:"Martian Mono","SF Mono",Menlo,monospace;--da-titre-espace:.08em;--da-ombre:0 0 0 1px color-mix(in srgb,var(--da-texte) 22%,transparent),0 0 22px color-mix(in srgb,var(--da-texte) 12%,transparent);
+  --da-decor:linear-gradient(color-mix(in srgb,var(--da-texte) 7%,transparent) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,color-mix(in srgb,var(--da-texte) 7%,transparent) 1px,transparent 1px) 0 0/28px 28px,radial-gradient(ellipse at 80% 0,color-mix(in srgb,var(--da-texte) 16%,var(--da-fond)),var(--da-fond) 60%)}
+:root[data-da="cockpit"] body{font-size:13px}
+:root[data-da="spatial"]{--da-titre:"Unbounded","Avenir Next",sans-serif;--da-corps:"Onest","Helvetica Neue",system-ui,sans-serif;--da-card:color-mix(in srgb,#fff 60%,transparent);--da-bd:rgba(255,255,255,.9);--da-rayon:22px;--da-ombre:0 18px 36px color-mix(in srgb,var(--da-accent) 16%,transparent),0 2px 0 rgba(255,255,255,.8) inset;
+  --da-decor:radial-gradient(circle at 12% 6%,#ffd9ec 0,transparent 36%),radial-gradient(circle at 88% 12%,#cfe4ff 0,transparent 40%),radial-gradient(circle at 60% 100%,#d9d2ff 0,transparent 50%),var(--da-fond)}
+:root[data-da="spatial"] :is(.card,.stat,dialog){-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+:root[data-da="spatial"] :is(h1,h2){font-weight:300!important;letter-spacing:-.02em}
+:root[data-da="braun"]{--da-titre:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;--da-corps:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;--da-card:color-mix(in srgb,var(--da-fond) 55%,#fff);--da-rayon:8px;--da-rayon-btn:6px;--da-ombre:0 1px 0 #fff inset,0 10px 20px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.18)}
+:root[data-da="braun"] .btn{box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 2px 3px rgba(0,0,0,.2)}
+:root[data-da="braun"] :is(label.f,th,.pill){font-family:"IBM Plex Mono","SF Mono",Menlo,monospace}
+:root[data-da="galerie"]{--da-titre:"Instrument Serif","Didot",Georgia,serif;--da-corps:"Geist","Helvetica Neue",system-ui,sans-serif;--da-card:var(--da-fond);--da-rayon:0px;--da-rayon-btn:0px;--da-ombre:10px 16px 28px color-mix(in srgb,var(--da-texte) 9%,transparent)}
+:root[data-da="galerie"] h1{font-style:italic;font-weight:400!important}
+:root[data-da="affiche"]{--da-titre:"Bowlby One","Arial Black",Impact,sans-serif;--da-corps:"DM Sans","Helvetica Neue",system-ui,sans-serif;--da-card:var(--da-accent);--da-bd:var(--da-texte);--accent:var(--da-texte)!important;--seal:var(--da-texte)!important;--accent-ink:var(--da-accent)!important;--muted:color-mix(in srgb,var(--da-texte) 78%,var(--da-fond))!important}
+:root[data-da="affiche"] :is(.card,.stat){clip-path:polygon(0 5px,calc(100% - 7px) 0,100% calc(100% - 4px),6px 100%);border:0!important}
+:root[data-da="affiche"] :is(h1,h2){font-weight:400!important}
+:root[data-da="memphis"]{--da-titre:"Bungee Shade","Bungee","Arial Black",sans-serif;--da-corps:"Karla","Helvetica Neue",system-ui,sans-serif;--da-card:#fff;--da-bd:var(--da-texte);--da-rayon:0px;--da-rayon-btn:0px;--da-ombre:7px 7px 0 var(--da-texte);
+  --da-decor:radial-gradient(var(--da-texte) 1.5px,transparent 1.8px) 0 0/30px 30px,radial-gradient(#1fbfb0 2.2px,transparent 2.6px) 15px 11px/44px 44px,var(--da-fond)}
+:root[data-da="memphis"] :is(.card,.stat){border:3px solid var(--da-texte)!important}
+:root[data-da="memphis"] .btn{box-shadow:4px 4px 0 var(--da-texte);border:2px solid var(--da-texte)}
+:root[data-da="memphis"] :is(h2,h3){font-family:"Bungee","Arial Black",sans-serif!important;font-weight:400!important}
+:root[data-da="outrun"]{--da-titre:"Mr Dafoe","Brush Script MT",cursive;--da-corps:"Onest","Helvetica Neue",system-ui,sans-serif;--da-card:color-mix(in srgb,var(--da-fond) 82%,transparent);--da-bd:#2de2ff;--da-rayon:6px;--da-rayon-btn:4px;--da-ombre:0 0 18px rgba(45,226,255,.4);
+  --da-decor:linear-gradient(180deg,var(--da-fond) 0,#3a0a55 46%,#7a1466 100%)}
+:root[data-da="outrun"] :is(h1,h2){font-weight:400!important;color:var(--da-accent)!important;text-shadow:0 0 6px var(--da-accent),0 0 24px var(--da-accent)}
+:root[data-da="outrun"] h3{font-family:"Michroma",Arial,sans-serif!important}
+:root[data-da="chrome"]{--da-titre:"Syncopate","Arial",sans-serif;--da-corps:"Space Mono","SF Mono",Menlo,monospace;--da-card:color-mix(in srgb,var(--da-fond) 30%,#fff);--da-bd:#9aa3b6;--da-rayon:18px;--da-ombre:0 0 0 1.5px #9aa3b6,0 14px 24px rgba(11,11,18,.18);
+  --da-decor:repeating-linear-gradient(115deg,rgba(255,255,255,.7) 0 2px,transparent 2px 9px),linear-gradient(160deg,color-mix(in srgb,var(--da-fond) 30%,#fff),var(--da-fond) 55%,color-mix(in srgb,var(--da-fond) 40%,#fff))}
+:root[data-da="chrome"] body{font-size:13px}
+:root[data-da="chrome"] h1{font-weight:700!important;text-transform:uppercase}
+:root[data-da="aube"]{--da-titre:"Fraunces","Didot",Georgia,serif;--da-corps:"Manrope","Helvetica Neue",system-ui,sans-serif;--da-card:color-mix(in srgb,var(--da-fond) 55%,transparent);--da-bd:color-mix(in srgb,var(--da-texte) 24%,transparent);--da-rayon:18px;--da-ombre:0 10px 40px color-mix(in srgb,var(--da-fond) 35%,transparent)}
+:root[data-da="brume"]{--da-titre:"Cormorant","Didot",Georgia,serif;--da-corps:"Figtree","Helvetica Neue",system-ui,sans-serif;--da-card:color-mix(in srgb,#fff 55%,transparent);--da-bd:rgba(255,255,255,.8);--da-rayon:18px;--da-ombre:0 10px 40px color-mix(in srgb,var(--da-texte) 14%,transparent)}
+:root:is([data-da="aube"],[data-da="brume"]) body{background:var(--da-image) center bottom/cover no-repeat fixed,var(--da-fond)!important}
+:root:is([data-da="aube"],[data-da="brume"]) :is(.card,.stat,dialog,header){-webkit-backdrop-filter:blur(16px) saturate(1.3);backdrop-filter:blur(16px) saturate(1.3)}
+:root:is([data-da="aube"],[data-da="brume"]) :is(h1,h2){font-style:italic;font-weight:300!important}
+@media print{:root[data-da] body{background:#fff!important}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="seal" aria-hidden="true">DI</div><div><h1>Droit à l'image</h1><div class="small muted" id="who">Connexion…</div></div></div>
+  <nav aria-label="Sections">
+    <button data-v="lib" aria-current="page">Mes contrats</button>
+    <button data-v="new">Nouvelle autorisation</button>
+    <button data-v="profile">Mon profil</button>
+    <button data-v="secu">Sécurité</button>
+    <button data-v="look">Apparence</button>
+    <button data-v="admin" hidden>Back-office</button>
+  </nav>
+</header>
+<main id="app"><div class="card muted">Chargement…</div></main>
+<dialog id="dlg"></dialog>
+
+<script>
+"use strict";
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+function el(tag,attrs,...kids){const n=document.createElement(tag);for(const[k,v]of Object.entries(attrs||{})){if(v==null||v===false)continue;if(k==="text")n.textContent=v;else if(k.startsWith("on"))n.addEventListener(k.slice(2),v);else if(k==="class")n.className=v;else n.setAttribute(k,v===true?"":v)}for(const c of kids.flat()){if(c==null||c===false)continue;n.append(c instanceof Node?c:document.createTextNode(String(c)))}return n}
+const clip=(s,n)=>String(s??"").trim().slice(0,n);
+const rid=()=>{const a=new Uint8Array(16);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,"0")).join("")};
+const today=()=>new Date().toISOString().slice(0,10);
+const fmtD=d=>d?new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"}):"—";
+const daysTo=d=>Math.round((new Date(d+"T12:00:00")-new Date(today()+"T12:00:00"))/864e5);
+const ROLES={filme:"Personne filmée",diffuseur:"Diffuseur",producteur:"Producteur",agence:"Agence de mannequins"};
+const SUPPORTS=["Réseaux sociaux","Site internet","Affichage urbain","Presse et print","Télévision","Cinéma","Salons et événements","Usage interne"];
+const ZONES=["France","Union européenne","Monde entier","Autre (préciser)"];
+
+/* ---------- state ---------- */
+const S={view:"lib",uid:null,db:null,user:null,downloads:null,profiles:{},ct:{},sig:{},names:{},loaded:false,err:"",sort:{k:"end",dir:1},filter:"all",open:null,draft:null,isAdmin:false,cfg:null,
+  role:null,myMods:{},roles:{},rolesReady:false,invites:[],invLoaded:false,access:[],myAccess:null,accLoaded:false,email:"",meName:"",boTab:"acc",INV:{email:"",name:"",role:"gest",msg:"",err:"",mail:null},G:{email:"",role:"gest",msg:"",err:"",busy:false}};
+const writeQ={};
+function queueSet(path,data){const prev=writeQ[path]||Promise.resolve();const p=prev.catch(()=>{}).then(()=>S.db.doc(path).set(data));writeQ[path]=p;return p}
+
+/* ---------- système design Fil Rouge (10 styles) ---------- */
+const FR_T={cockpit:["Cockpit","Futuriste","06080f,cfe3ff,ff6a2b"],spatial:["Spatial","Futuriste","eeecf8,1b1b2a,5b4bff",1],
+  braun:["Braun","Minimaliste","e9e7e1,1d1d1b,ef5b1c",1],galerie:["Galerie","Minimaliste","fbfbf9,101010,1f3bff",1],
+  affiche:["Affiche","Années 50","e5482c,111111,f3e6cf"],memphis:["Memphis","Années 80","fdfbf4,111111,ff5d9e",1],
+  outrun:["Outrun","Années 80","12032b,f9e9ff,ff2bd6",1],chrome:["Chrome","Années 2000","dfe4ec,0b0b12,7a5cff",1],
+  aube:["Aube","Image","2a1f3d,fff6ef,ff8a5c",1],brume:["Brume","Image","eef3ea,15281f,2f6b47",1]};
+const FR_PALS=["f6f1e7,1a1714,c8102e","070b14,dde8ff,00e5ff","ffffff,111111,ff4d00","0f1f17,e9f2ea,c6a15b","1d1d1f,f5f5f7,30d158","fdf6ec,3b2f2f,2a9d8f","22223b,f2e9e4,c9ada7","fff8e7,1b3a4b,f4a259","0d0d0d,fafafa,ffd60a"];
+const FR_FONTS="https://fonts.googleapis.com/css2?family=Bowlby+One&family=Bungee&family=Bungee+Shade&family=Cormorant:ital,wght@0,500;1,500&family=DM+Sans:wght@400;600&family=Familjen+Grotesk:wght@400;600;700&family=Figtree:wght@400;600&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&family=Geist:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Karla:wght@400;700&family=Manrope:wght@400;600&family=Martian+Mono:wght@400;600&family=Michroma&family=Mr+Dafoe&family=Onest:wght@400;600&family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&family=Tektur:wght@500;800&family=Unbounded:wght@300;600&display=swap";
+const HEX6=/^[0-9a-f]{6}$/i;
+const FR_IMG=(()=>{const W=1600,H=1000;
+  const rnd=s0=>{let s=s0*9301+49297;return()=>{s=(s*9301+49297)%233280;return s/233280}};
+  const crete=(seed,base,amp,n,rugo)=>{const r=rnd(seed),ph=[r()*6.28,r()*6.28,r()*6.28],p=[];for(let i=0;i<=n;i++){const x=i*W/n,k=x/W*2*Math.PI;p.push([Math.round(x),Math.round(base+amp*(.55*Math.sin(k*1.1+ph[0])+.3*Math.sin(k*2.7+ph[1])+rugo*.25*Math.sin(k*6.3+ph[2])))])}
+    let d="M0 "+H+"L"+p[0][0]+" "+p[0][1];for(let i=1;i<p.length;i++)d+="Q"+p[i-1][0]+" "+p[i-1][1]+" "+((p[i-1][0]+p[i][0])>>1)+" "+((p[i-1][1]+p[i][1])>>1);return d+"L"+W+" "+p[p.length-1][1]+"L"+W+" "+H+"Z"};
+  const scene=(ciel,sol,couches)=>{let s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMax slice"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1">'+ciel.map(c=>'<stop offset="'+c[0]+'" stop-color="'+c[1]+'"/>').join("")+'</linearGradient><radialGradient id="g"><stop offset="0" stop-color="'+sol[3]+'" stop-opacity=".9"/><stop offset="1" stop-color="'+sol[3]+'" stop-opacity="0"/></radialGradient></defs><rect width="'+W+'" height="'+H+'" fill="url(#s)"/><circle cx="'+sol[0]+'" cy="'+sol[1]+'" r="'+sol[2]*4+'" fill="url(#g)"/><circle cx="'+sol[0]+'" cy="'+sol[1]+'" r="'+sol[2]+'" fill="'+sol[3]+'"/>';
+    couches.forEach(c=>{s+='<path d="'+c[0]+'" fill="'+c[1]+'"/>'});return 'url("data:image/svg+xml,'+encodeURIComponent(s+"</svg>")+'")'};
+  return{aube:()=>scene([[0,"#2a1f4d"],[.45,"#b0619a"],[.75,"#ff9e7a"],[1,"#ffd3a5"]],[1050,560,46,"#fff1d6"],[[crete(1,560,60,16,.5),"#c77b9a"],[crete(2,640,70,16,.5),"#8f5486"],[crete(3,730,80,16,.5),"#5e3a6e"],[crete(4,830,70,16,.5),"#3a2650"],[crete(5,920,50,16,.5),"#21173a"]]),
+    brume:()=>scene([[0,"#c9dcc8"],[.6,"#e8efe0"],[1,"#f3f5ec"]],[1200,300,40,"#fbfff2"],[[crete(31,520,70,24,1.4),"#a9c2a8"],[crete(32,610,80,24,1.4),"#86a888"],[crete(33,700,80,24,1.4),"#5f8a66"],[crete(34,800,70,24,1.4),"#3e6a4a"],[crete(35,900,60,24,1.4),"#22422f"]])}})();
+const frLum=hex=>{const n=parseInt(hex,16);return(0.299*(n>>16)+0.587*((n>>8)&255)+0.114*(n&255))/255};
+/* Pose un style Fil Rouge (ou le retire si id est vide). Le thème Sombre / Lumineux de base suit la couleur de fond du style. */
+function frApply(id,pal){
+  const R=document.documentElement,t=FR_T[id];
+  if(!t){["data-da","data-da-sombre","data-da-rond"].forEach(a=>R.removeAttribute(a));["--da-fond","--da-texte","--da-accent","--da-on","--da-image"].forEach(v=>R.style.removeProperty(v));return}
+  if(!document.getElementById("fr-da-fonts")){const l=document.createElement("link");l.id="fr-da-fonts";l.rel="stylesheet";l.href=FR_FONTS;document.head.append(l)}
+  let c=String(pal||t[2]).split(",");if(c.length!==3||!c.every(x=>HEX6.test(x)))c=t[2].split(",");
+  const dark=frLum(c[0])<.5;
+  R.setAttribute("data-da",id);R.toggleAttribute("data-da-sombre",dark);R.toggleAttribute("data-da-rond",!!t[3]);R.setAttribute("data-theme",dark?"dark":"light");
+  R.style.setProperty("--da-fond","#"+c[0]);R.style.setProperty("--da-texte","#"+c[1]);R.style.setProperty("--da-accent","#"+c[2]);R.style.setProperty("--da-on",frLum(c[2])>.6?"#111111":"#ffffff");
+  if(FR_IMG[id])R.style.setProperty("--da-image",FR_IMG[id]());else R.style.removeProperty("--da-image");
+}
+
+/* ---------- back-office : services, charte, liberté (document admin/config, écrit par le seul propriétaire) ---------- */
+const CFG_PATH="admin/config";
+const FEATURES=[
+  ["library","Bibliothèque de contrats","Le tableau « Mes contrats » avec ses filtres et son tri."],
+  ["create","Nouvelle autorisation","Les utilisateurs peuvent créer des contrats (onglet « Nouvelle autorisation »)."],
+  ["edit","Modification et suppression","Le créateur d'un contrat peut le modifier, ou le supprimer tant qu'il n'est pas signé."],
+  ["signature","Signature électronique","Signature dessinée, liée à l'empreinte SHA-256 du contrat."],
+  ["pdf","Téléchargement PDF","Export du contrat et de ses signatures en PDF."],
+  ["minors","Autorisations pour mineurs","Signature par les représentants légaux."],
+  ["paid","Cession rémunérée","Montant de la rémunération dans le contrat."],
+  ["reminders","Rappels","Bandeaux « à signer » et « expire bientôt » dans l'appli. Les rappels par e-mail arriveront avec la version hébergée."],
+  ["import","Import papier","Numériser un contrat déjà signé sur papier. Le réglage est gardé pour quand le service sera prêt.",true],
+  ["secu","Page Sécurité","L'onglet qui explique les protections de cette version."]
+];
+function cfgMerge(d){d=d||{};const f={};for(const[k]of FEATURES)f[k]=!(d.features&&d.features[k]===false);
+  const c=Object.assign({glass:true,theme:"auto",style:"",pal:""},d.charte||{});
+  if(!["auto","dark","light"].includes(c.theme))c.theme="auto";if(!FR_T[c.style])c.style="";c.pal=typeof c.pal==="string"?c.pal:"";c.glass=c.glass!==false;
+  return{features:f,charte:{glass:c.glass,theme:c.theme,style:c.style,pal:c.pal},liberty:["libre","mode","impose"].includes(d.liberty)?d.liberty:"libre"}}
+S.cfg=cfgMerge(null);
+/* Un service est visible si l'administrateur l'a activé pour tous, si le rôle de la personne le permet et si son accès module n'est pas décoché. */
+function feat(k){
+  if(S.cfg&&S.cfg.features[k]===false)return false;
+  if(S.isAdmin||!S.role)return true;
+  const r=S.role;
+  if((k==="create"||k==="edit"||k==="minors"||k==="paid"||k==="import")&&r!=="gest")return false;
+  if(k==="signature"&&r==="lect")return false;
+  const mk=k==="minors"||k==="paid"||k==="edit"?"create":k;
+  if(MODS.some(m=>m[0]===mk)&&S.myMods[mk]===false)return false;
+  return true;
+}
+
+/* ---------- comptes : rôles, invitations, demandes d'accès (comme l'Inventaire M la créative) ---------- */
+const APP_URL="https://claude.ai/artifact/Y2T6SBRVZjT12CCBvm1aNc";
+const PROLES={admin:"Administrateur",gest:"Gestionnaire",sign:"Signataire",lect:"Lecture seule"};
+const PROLE_HINT={admin:"Tout gérer, y compris les comptes (propriétaire de l'appli)",gest:"Crée, modifie, signe et exporte les autorisations",sign:"Consulte et signe les autorisations qui le concernent",lect:"Consulte seulement"};
+const MODS=[["library","Bibliothèque"],["create","Nouvelle autorisation"],["signature","Signature"],["pdf","PDF"],["import","Import papier"],["reminders","Rappels"]];
+const normEmail=e=>String(e||"").trim().toLowerCase();
+const isEmail=e=>/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
+const nowIso=()=>new Date().toISOString();
+function myInvite(){if(!S.email)return null;return S.invites.find(i=>normEmail(i.email)===S.email&&i.status!=="revoked")||null}
+function computeRole(){
+  const rec=S.roles[S.uid];let r=null;
+  if(S.isAdmin)r="admin";
+  else if(rec&&(PROLES[rec.role]||rec.role==="none"))r=rec.role==="admin"?"gest":rec.role;
+  else{const iv=myInvite();if(iv&&PROLES[iv.role])r=iv.role;else if(S.uid&&S.profiles[S.uid])r="gest";else if(S.rolesReady&&S.invLoaded&&S.loaded)r="none"}
+  S.role=r;S.myMods=(rec&&rec.mods&&typeof rec.mods==="object")?rec.mods:{};
+}
+function accBoot(){
+  const db=S.db;
+  try{db.collection("roles").onSnapshot(s=>{S.roles={};s.docs.forEach(d=>{const x=d.data()||{};S.roles[d.id]={role:x.role,mods:x.mods||{},email:x.email||"",at:x.updatedAt||""}});S.rolesReady=true;accAfter()},()=>{S.rolesReady=true;accAfter()})}catch(e){S.rolesReady=true}
+  try{db.collection("invites").onSnapshot(s=>{S.invites=s.docs.map(d=>({id:d.id,...(d.data()||{})}));S.invLoaded=true;accAfter()},()=>{S.invLoaded=true;accAfter()})}catch(e){S.invLoaded=true}
+  if(S.isAdmin){try{db.collection("access").onSnapshot(s=>{S.access=s.docs.map(d=>({id:d.id,...(d.data()||{})}));S.accLoaded=true;accAfter();names(S.access.map(a=>a.id)).then(()=>{if(S.view==="admin")cfgRender()})},()=>{S.accLoaded=true})}catch(e){S.accLoaded=true}}
+  else{const rd=async()=>{try{const d=await db.doc("access/"+S.uid).get();S.myAccess=d&&d.exists?{id:S.uid,...(d.data()||{})}:null}catch(e){}S.accLoaded=true;accAfter()};rd();setInterval(()=>{if(S.role==="none")rd()},20000)}
+}
+let accT=null;
+function accAfter(){clearTimeout(accT);accT=setTimeout(()=>{const before=S.role;computeRole();adminNav();autoLinkInvites();selfAnnounce();if(S.loaded&&(before!==S.role||S.view==="admin"||S.role==="none"))cfgRender()},60)}
+/* La personne invitée se signale à sa première connexion : l'administrateur la relie à son invitation. */
+let announced=false;
+async function selfAnnounce(){
+  if(announced||S.isAdmin||!S.accLoaded||S.myAccess||!S.uid)return;const iv=myInvite();if(!iv)return;announced=true;
+  const d={uid:S.uid,email:S.email,accountEmail:S.email,name:S.meName,roleWanted:iv.role,msg:"",status:"pending",via:"invite",at:nowIso()};
+  try{await S.db.doc("access/"+S.uid).set(d);S.myAccess={id:S.uid,...d}}catch(e){}
+}
+const linking=new Set();
+async function autoLinkInvites(){
+  if(!S.isAdmin||!S.accLoaded||!S.invLoaded||!S.rolesReady)return;
+  for(const a of S.access){
+    if(S.roles[a.id]||linking.has(a.id)||a.status==="refused"||a.status==="removed")continue;
+    const iv=S.invites.find(i=>i.status!=="revoked"&&i.status!=="accepted"&&(normEmail(i.email)===normEmail(a.email)||normEmail(i.email)===normEmail(a.accountEmail)));
+    if(!iv)continue;linking.add(a.id);
+    try{await S.db.doc("roles/"+a.id).set({role:iv.role,mods:{},email:normEmail(a.email||a.accountEmail),updatedAt:nowIso(),by:S.uid,via:"invite"});
+      await S.db.doc("access/"+a.id).set(clean({...a,id:undefined,status:"approved",role:iv.role,decidedAt:nowIso(),note:"Invitation"}));
+      await S.db.doc("invites/"+iv.id).set(clean({...iv,id:undefined,status:"accepted",acceptedAt:nowIso(),uid:a.id}))}catch(e){}
+  }
+}
+function clean(o){return JSON.parse(JSON.stringify(o))}
+function gateView(){
+  const G=S.G,a=S.myAccess;
+  const who=el("p",{class:"small muted"},"Connecté avec le compte Claude de ",el("b",{text:S.meName||S.names[S.uid]||"vous"}),S.email?" · "+S.email:"");
+  if(a&&a.status==="pending")return el("div",{class:"card",style:"display:grid;gap:10px;max-width:560px"},who,el("h2",{text:"Demande envoyée"}),
+    el("p",{text:`Votre demande d'accès (rôle souhaité : ${PROLES[a.roleWanted]||"—"}) a été envoyée le ${new Date(a.at).toLocaleDateString("fr-FR")}.`}),el("p",{class:"small muted",text:"L'administrateur doit la valider. Cette page s'ouvrira automatiquement ensuite."}));
+  if(!G.email)G.email=S.email;
+  const em=el("input",{type:"email",id:"g-email",value:G.email,autocomplete:"email",placeholder:"prenom.nom@entreprise.fr"});
+  const ro=el("select",{id:"g-role"},["gest","sign","lect"].map(k=>el("option",{value:k,selected:G.role===k,text:PROLES[k]+" — "+PROLE_HINT[k]})));
+  const ms=el("textarea",{id:"g-msg",rows:3,placeholder:"Société, projet, besoin…"});ms.value=G.msg;
+  return el("div",{class:"card",style:"display:grid;gap:12px;max-width:560px"},who,el("h2",{text:"Demander l'accès"}),
+    a&&a.status==="refused"?el("div",{class:"banner",style:"border-left-color:var(--bad)",text:"Votre précédente demande a été refusée. Vous pouvez en refaire une."}):null,
+    el("p",{text:"Vous n'avez pas encore accès aux autorisations de droit à l'image. Demandez un accès : l'administrateur validera votre rôle."}),
+    el("label",{class:"f"},"E-mail professionnel",em),el("label",{class:"f"},"Rôle souhaité",ro),el("label",{class:"f"},"Message (facultatif)",ms),
+    G.err?el("p",{class:"err",role:"alert",text:G.err}):null,
+    el("div",{class:"row"},el("button",{class:"btn primary",disabled:G.busy,onclick:async()=>{
+      G.email=normEmail(em.value);G.role=ro.value;G.msg=clip(ms.value,500);
+      if(!isEmail(G.email)){G.err="Indiquez une adresse e-mail valide.";render();return}
+      G.err="";G.busy=true;
+      const d={uid:S.uid,email:G.email,accountEmail:S.email,name:S.meName,roleWanted:G.role,msg:G.msg,status:"pending",at:nowIso()};
+      try{await queueSet("access/"+S.uid,d);S.myAccess={id:S.uid,...d}}catch(e){G.err="Envoi impossible : demandez à l'administrateur de vous partager l'appli en « Contributeur »."}
+      G.busy=false;render()},text:"Demander l'accès"})));
+}
+function inviteText(iv){
+  const subject="Invitation : Droit à l'image";
+  const body=`Bonjour${iv.name?" "+iv.name:""},\n\nVous êtes invité(e) à rejoindre l'application « Droit à l'image » avec le rôle : ${PROLES[iv.role]} (${PROLE_HINT[iv.role]}).\n\n1. Ouvrez ce lien : ${APP_URL}\n2. Connectez-vous à Claude avec cette adresse : ${iv.email} (créez un compte gratuit si besoin, avec cette même adresse).\n3. Vos accès s'activent automatiquement à votre première connexion.\n\nÀ bientôt,\n${S.meName||""}`;
+  return{subject,body,href:"mailto:"+encodeURIComponent(iv.email)+"?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body)};
+}
+function memberList(){
+  const ids=new Set([...Object.keys(S.roles),...Object.keys(S.profiles)]);ids.delete(S.uid);
+  return[...ids].map(id=>{const rec=S.roles[id];const a=S.access.find(x=>x.id===id)||{};const p=S.profiles[id]||{};
+    return{id,role:rec&&(PROLES[rec.role]||rec.role==="none")?(rec.role==="admin"?"gest":rec.role):"gest",legacy:!rec,mods:(rec&&rec.mods)||{},email:(rec&&rec.email)||a.email||a.accountEmail||p.email||"",name:p.legal||S.names[id]||a.name||"Compte invité",type:p.type}})
+    .sort((x,y)=>x.name.localeCompare(y.name,"fr"));
+}
+function setMember(m,patch){const next={role:m.role,mods:{...m.mods},email:m.email,...patch,updatedAt:nowIso(),by:S.uid};return queueSet("roles/"+m.id,clean(next)).catch(()=>{})}
+function accessTab(){
+  const INV=S.INV,pend=S.access.filter(a=>a.status==="pending").sort((x,y)=>String(x.at).localeCompare(String(y.at)));
+  const rsel=(val,on,id)=>el("select",{id,"aria-label":"Rôle",onchange:e=>on(e.target.value)},["gest","sign","lect","none"].map(k=>el("option",{value:k,selected:val===k,text:k==="none"?"Sans accès":PROLES[k]})));
+  const IST={sent:"Envoyée",accepted:"Acceptée",revoked:"Révoquée"};
+  const em=el("input",{type:"email",id:"inv-email",value:INV.email,placeholder:"prenom.nom@entreprise.fr"}),nm=el("input",{id:"inv-name",value:INV.name,placeholder:"Prénom Nom"});
+  const ro=el("select",{id:"inv-role"},["gest","sign","lect"].map(k=>el("option",{value:k,selected:INV.role===k,text:PROLES[k]+" — "+PROLE_HINT[k]})));
+  const mem=memberList();
+  const decide=async(a,ok,role)=>{if(ok){await setMember({id:a.id,role,mods:{},email:normEmail(a.email||a.accountEmail)},{});await queueSet("access/"+a.id,clean({...a,id:undefined,status:"approved",role,decidedAt:nowIso(),decidedBy:S.uid})).catch(()=>{})}
+    else await queueSet("access/"+a.id,clean({...a,id:undefined,status:"refused",decidedAt:nowIso(),decidedBy:S.uid})).catch(()=>{})};
+  return[
+    el("section",{class:"card",style:"display:grid;gap:10px"},el("h3",{},"Demandes en attente ",pend.length?el("span",{class:"badge-n",text:pend.length}):null),
+      pend.length?pend.map(a=>{let r=a.roleWanted&&PROLES[a.roleWanted]&&a.roleWanted!=="admin"?a.roleWanted:"gest";const sel=rsel(r,v=>{r=v});sel.querySelector('option[value="none"]').remove();
+        return el("div",{class:"accrow"},el("b",{text:S.names[a.id]||a.name||"Quelqu'un"}),el("div",{class:"e",text:`${a.email||""}${a.accountEmail&&a.accountEmail!==a.email?" · compte "+a.accountEmail:""} · ${new Date(a.at).toLocaleDateString("fr-FR")}`}),a.msg?el("div",{class:"small",text:a.msg}):null,
+          el("div",{class:"row"},sel,el("button",{class:"btn primary",onclick:()=>decide(a,true,r),text:"Valider"}),el("button",{class:"btn danger",onclick:()=>decide(a,false),text:"Refuser"})))}):el("p",{class:"small muted",text:"Aucune demande en attente."})),
+    el("section",{class:"card",style:"display:grid;gap:10px"},el("h3",{text:"Inviter par e-mail"}),
+      el("div",{class:"grid2"},el("label",{class:"f"},"E-mail professionnel",em),el("label",{class:"f"},"Nom (facultatif)",nm),el("label",{class:"f"},"Rôle et accès",ro)),
+      INV.err?el("p",{class:"err",role:"alert",text:INV.err}):null,
+      INV.msg?el("div",{class:"banner",style:"border-left-color:var(--ok)"},INV.msg," ",INV.mail?el("a",{href:INV.mail.href,target:"_blank",rel:"noopener",text:"Ouvrir l'e-mail d'invitation"}):null):null,
+      INV.mail?el("textarea",{readonly:true,rows:7,"aria-label":"Texte de l'invitation",style:"width:100%;border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:8px",text:INV.mail.body}):null,
+      el("div",{class:"row"},el("button",{class:"btn primary",onclick:async()=>{
+        INV.email=normEmail(em.value);INV.name=clip(nm.value,120);INV.role=ro.value;
+        if(!isEmail(INV.email)){INV.err="Adresse e-mail invalide.";INV.msg="";render();return}
+        const key=INV.email.replace(/[^a-z0-9]+/g,"_");const iv={email:INV.email,name:INV.name,role:INV.role,status:"sent",at:nowIso(),by:S.uid,byName:S.meName||""};
+        try{await queueSet("invites/"+key,iv)}catch(e){INV.err="Enregistrement impossible.";render();return}
+        INV.mail=inviteText(iv);INV.msg=`Invitation enregistrée pour ${iv.email}. Envoyez-la depuis votre messagerie :`;INV.err="";INV.email="";INV.name="";render();
+        try{window.open(INV.mail.href,"_blank")}catch(e){}},text:"✉️ Inviter et préparer l'e-mail"})),
+      el("p",{class:"small muted",text:"L'invitation s'ouvre dans votre messagerie, prête à envoyer. La personne obtient son rôle automatiquement dès qu'elle ouvre l'appli avec un compte Claude à cette adresse."}),
+      S.invites.slice().sort((x,y)=>String(y.at).localeCompare(String(x.at))).map(i=>el("div",{class:"accrow"},el("b",{text:i.name||i.email}),el("div",{class:"e",text:`${i.email} · ${PROLES[i.role]||""} · ${IST[i.status]||i.status} · ${i.at?new Date(i.at).toLocaleDateString("fr-FR"):""}`}),
+        i.status!=="accepted"?el("div",{class:"row"},el("a",{class:"btn",href:inviteText(i).href,target:"_blank",rel:"noopener",text:"Renvoyer"}),i.status!=="revoked"?el("button",{class:"btn danger",onclick:()=>queueSet("invites/"+i.id,clean({...i,id:undefined,status:"revoked",revokedAt:nowIso()})).catch(()=>{}),text:"Révoquer"}):null):null))),
+    el("section",{class:"card",style:"display:grid;gap:10px"},el("h3",{text:"Membres et accès module par module"}),
+      el("p",{class:"small muted",text:"Cochez les modules ouverts à chaque personne. Le rôle fixe ce qu'elle a le droit de faire ; le type de compte métier (personne filmée, diffuseur, producteur, agence) reste celui de son profil. Un service désactivé dans « Fonctionnalités » est fermé pour tout le monde."}),
+      el("div",{class:"acc-wrap"},el("div",{class:"acc-list",role:"table","aria-label":"Accès par personne"},
+        el("div",{class:"acc-row head",role:"row"},el("span",{text:"Personne"}),el("span",{text:"Rôle"}),MODS.map(m=>el("span",{class:"acc-h",text:m[1]})),el("span")),
+        el("div",{class:"acc-row",role:"row"},el("span",{class:"acc-who"},el("b",{text:(S.profiles[S.uid]&&S.profiles[S.uid].legal||S.meName||"Vous")+" (vous)"}),el("em",{text:S.email||"Propriétaire de l'appli"})),el("span",{class:"small",text:"Administrateur"}),
+          el("span",{class:"acc-mods"},MODS.map(m=>el("label",{class:"acc-c"},el("input",{type:"checkbox",checked:true,disabled:true,"aria-label":m[1]+" pour vous"}),el("em",{class:"acc-l",text:m[1]})))),el("span",{class:"small muted",text:"accès complet"})),
+        mem.map(m=>el("div",{class:"acc-row",role:"row"},
+          el("span",{class:"acc-who"},el("b",{text:m.name}),el("em",{text:[m.type?ROLES[m.type]:"",m.email,m.legacy?"membre existant":""].filter(Boolean).join(" · ")})),
+          rsel(m.role,v=>setMember(m,{role:v}),"role-"+m.id),
+          el("span",{class:"acc-mods"},MODS.map(([k,l])=>el("label",{class:"acc-c"},el("input",{type:"checkbox",checked:m.role!=="none"&&m.mods[k]!==false,disabled:m.role==="none","aria-label":l+" pour "+m.name,onchange:e=>setMember(m,{mods:{...m.mods,[k]:e.target.checked}})}),el("em",{class:"acc-l",text:l})))),
+          el("span",{class:"acc-a"},el("button",{class:"mini",onclick:()=>setMember(m,{mods:{}}),text:"Tout"}),el("button",{class:"mini",onclick:()=>setMember(m,{mods:Object.fromEntries(MODS.map(x=>[x[0],false]))}),text:"Aucun"}),
+            m.role!=="none"?el("button",{class:"mini",style:"color:var(--bad)",onclick:()=>confirmDlg(`Retirer l'accès de ${m.name} ? Ses contrats et signatures restent enregistrés.`,()=>setMember(m,{role:"none"})),text:"Retirer"}):null))))),
+      mem.length?null:el("p",{class:"small muted",text:"Aucun autre membre pour l'instant. Invitez quelqu'un ci-dessus."}))
+  ];
+}
+function adminNav(){
+  const b=v=>document.querySelector(`nav button[data-v="${v}"]`);
+  if(b("admin"))b("admin").hidden=!S.isAdmin;if(b("new"))b("new").hidden=!feat("create");if(b("secu"))b("secu").hidden=!feat("secu");
+}
+function cfgRender(){if(S.view==="profile"||(S.view==="new"&&feat("create")))return;
+  const ae=document.activeElement;if(ae&&ae.closest&&ae.closest("#app")&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&ae.type!=="checkbox"&&ae.type!=="radio"){clearTimeout(cfgRender.t);cfgRender.t=setTimeout(cfgRender,1500);return}
+  render()}
+
+/* ---------- apparence effective : charte de l'équipe, puis choix personnel selon la liberté accordée ---------- */
+const LOOK_K="di_look_v1";
+function lookMine(){try{return JSON.parse(localStorage.getItem(LOOK_K))||{}}catch(e){return{}}}
+function lookSave(p){try{if(p)localStorage.setItem(LOOK_K,JSON.stringify(p));else localStorage.removeItem(LOOK_K)}catch(e){}}
+function lookEff(){const c=S.cfg.charte,l=S.cfg.liberty,m=lookMine();
+  if(l==="mode"&&(m.mode==="dark"||m.mode==="light"))return{glass:c.glass,theme:m.mode,style:"",pal:"",src:"mode"};
+  if(l==="libre"&&m.set)return{glass:true,theme:["auto","dark","light"].includes(m.theme)?m.theme:"auto",style:FR_T[m.style]?m.style:"",pal:typeof m.pal==="string"?m.pal:"",src:"mine"};
+  return{...c,src:"team"}}
+let lookKey="";
+function applyLook(){
+  const e=lookEff(),R=document.documentElement,lg=window.LG;
+  if(e.style)frApply(e.style,e.pal);else{frApply("");if(e.theme==="auto")R.removeAttribute("data-theme");else R.setAttribute("data-theme",e.theme)}
+  let changed=false;
+  if(lg&&e.src!=="mine"&&(lg.get().on!==false)!==e.glass){lg.set({on:e.glass});changed=true}
+  const k=[e.theme,e.style,e.pal].join("|");if(k!==lookKey){if(lookKey)changed=true;lookKey=k}
+  if(changed&&lg&&lg.repaint)setTimeout(()=>{try{lg.repaint()}catch(x){}},60);
+}
+applyLook();
+const SW={glass:"radial-gradient(circle at 25% 30%,#5b6cff,transparent 55%),radial-gradient(circle at 80% 60%,#e0687b,transparent 55%),#1b2030",flat:"linear-gradient(90deg,#f4f5f7 60%,#2a3fb8 60% 80%,#151a2d 80%)",
+  dark:"linear-gradient(90deg,#10131c 60%,#8c9cff 60% 80%,#e8eaf2 80%)",light:"linear-gradient(90deg,#f4f5f7 60%,#2a3fb8 60% 80%,#151a2d 80%)",auto:"linear-gradient(90deg,#f4f5f7 50%,#10131c 50%)"};
+function charteName(c){return(c.style?FR_T[c.style][0]:{auto:"Automatique",dark:"Sombre",light:"Lumineux"}[c.theme])+(c.glass?" · Liquid Glass":" · Classique")}
+function tileBtn(label,sub,bg,pressed,dis,on){return el("button",{type:"button",class:"tile","aria-pressed":String(!!pressed),disabled:!!dis,onclick:dis?null:on},el("i",{style:"background:"+bg}),el("b",{text:label}),sub?el("small",{text:sub}):null)}
+let lookFineOpen=false;
+function glassFine(){
+  const L=window.LG,g=L.get();
+  const sl=(k,l,mn,mx,u)=>{const b=el("b",{text:g[k]+u});return el("label",{class:"rng"},el("span",{text:l}),el("input",{type:"range",min:mn,max:mx,value:g[k],"aria-label":l,oninput:e=>{L.set({[k]:+e.target.value});b.textContent=e.target.value+u}}),b)};
+  const yn=(k,l)=>el("div",{class:"row",style:"margin:8px 0"},el("span",{class:"grow",text:l}),el("div",{class:"chips",role:"group","aria-label":l},[[true,"Oui"],[false,"Non"]].map(([v,t])=>el("button",{type:"button",class:"btn"+((g[k]!==false)===v?" primary":""),"aria-pressed":String((g[k]!==false)===v),onclick:()=>{L.set({[k]:v});render()}},t))));
+  return el("details",{class:"fine",open:lookFineOpen,ontoggle:e=>{lookFineOpen=e.target.open}},el("summary",{text:"Réglages du verre"}),
+    sl("blur","Flou",0,40," px"),sl("alpha","Opacité du verre",20,92," %"),sl("hl","Reflets",0,100," %"),yn("wall","Fond vivant et parallaxe"),yn("tilt","Relief 3D au survol"),
+    el("button",{type:"button",class:"btn",onclick:()=>{L.set({blur:26,alpha:58,hl:60,wall:true,tilt:true});render()},text:"Réglages du verre par défaut"}));
+}
+/* Bloc commun au menu Apparence et à la charte du back-office : Liquid Glass, puis Sombre / Lumineux, puis les 10 styles. */
+function lookEditor(v,o){
+  const noop=()=>{},teamOn=!!o.teamOn;
+  const out=[el("p",{class:"ap-h",text:"Matière"}),el("div",{class:"tiles",role:"group","aria-label":"Matière"},
+    tileBtn("Liquid Glass","Par défaut",SW.glass,v.glass,o.lockGlass,()=>(o.onGlass||noop)(true)),
+    tileBtn("Classique","Sans effet verre",SW.flat,!v.glass,o.lockGlass,()=>(o.onGlass||noop)(false)))];
+  if(o.fine&&v.glass&&window.LG)out.push(glassFine());
+  out.push(el("p",{class:"ap-h",text:"Thème"}),el("div",{class:"tiles",role:"group","aria-label":"Thème"},
+    o.team?tileBtn("Charte de l'équipe",o.team,SW.auto,teamOn,false,()=>o.onTheme("team")):null,
+    tileBtn("Sombre","",SW.dark,!teamOn&&!v.style&&v.theme==="dark",o.lockTheme,()=>o.onTheme("dark")),
+    tileBtn("Lumineux","",SW.light,!teamOn&&!v.style&&v.theme==="light",o.lockTheme,()=>o.onTheme("light")),
+    o.noAuto?null:tileBtn("Automatique","Suit l'appareil",SW.auto,!v.style&&v.theme==="auto",o.lockTheme,()=>o.onTheme("auto"))));
+  out.push(el("p",{class:"ap-h",text:"Styles Fil Rouge"}),el("div",{class:"tiles",role:"group","aria-label":"Styles Fil Rouge"},
+    Object.entries(FR_T).map(([k,t])=>{const c=t[2].split(",");return tileBtn(t[0],t[1],`linear-gradient(90deg,#${c[0]} 0 60%,#${c[1]} 60% 85%,#${c[2]} 85%)`,!teamOn&&v.style===k||teamOn&&o.teamStyle===k,o.lockStyle,()=>o.onStyle(k))})));
+  if(v.style&&FR_T[v.style]&&!o.lockStyle){
+    const cur=String(v.pal||FR_T[v.style][2]).split(",");
+    const cps=el("div",{class:"cps"},["Fond","Texte","Accent"].map((n,i)=>el("label",{},n,el("input",{type:"color",value:"#"+(HEX6.test(cur[i]||"")?cur[i]:"000000"),"aria-label":"Couleur : "+n,onchange:()=>o.onPal([...cps.querySelectorAll("input")].map(z=>z.value.replace("#","")).join(","))}))));
+    out.push(el("p",{class:"ap-h",text:"Couleurs du style : fond, texte, accent"}),
+      el("div",{class:"pals"},FR_PALS.map(p=>el("button",{type:"button",class:"pal","aria-label":"Palette "+p,onclick:()=>o.onPal(p)},p.split(",").map(c=>el("i",{style:"background:#"+c})))),
+        el("button",{type:"button",class:"btn small",onclick:()=>o.onPal(""),text:"Couleurs d'origine"})),cps);
+  }
+  return out;
+}
+function lookView(){
+  const l=S.cfg.liberty,e=lookEff(),c=S.cfg.charte;
+  const mine=p=>{lookSave(Object.assign({},lookMine(),p));applyLook();render()};
+  let note,o,v=e;
+  if(l==="impose"){note="L'administrateur applique la même charte à tout le monde : « "+charteName(c)+" ».";o={lockGlass:true,lockTheme:true,lockStyle:true}}
+  else if(l==="mode"){note="La charte « "+charteName(c)+" » est choisie par l'administrateur. Vous pouvez seulement passer en Sombre ou en Lumineux.";
+    o={lockGlass:true,lockStyle:true,noAuto:true,team:charteName(c),teamOn:e.src==="team",teamStyle:c.style,onTheme:k=>mine({mode:k==="team"?"":k})};if(e.src==="team")v={...c,style:""}}
+  else{const base={set:true,theme:e.theme,style:e.style,pal:e.pal};v={...e,glass:e.src==="mine"&&window.LG?window.LG.get().on!==false:e.glass};
+    note=e.src==="mine"?"Vos réglages, gardés dans ce navigateur. Liquid Glass s'applique à tous les thèmes et styles.":"Vous utilisez la charte de l'équipe (« "+charteName(c)+" »). Ce que vous changez ici ne vaut que pour vous.";
+    o={fine:true,
+      onGlass:g=>{lookSave(Object.assign({},lookMine(),base));if(window.LG){window.LG.set({on:g});setTimeout(()=>{try{window.LG.repaint&&window.LG.repaint()}catch(x){}},60)}render()},
+      onTheme:k=>mine({...base,theme:k,style:"",pal:""}),onStyle:k=>mine({...base,style:k,pal:""}),onPal:p=>mine({...base,pal:p})}}
+  return el("div",{class:"card",style:"display:grid;gap:4px"},
+    el("h2",{text:"Apparence"}),el("p",{class:"muted small",style:"margin:4px 0 6px",text:"Liquid Glass par défaut, deux thèmes, Sombre et Lumineux, puis les 10 styles du système design Fil Rouge."}),
+    el("div",{class:l==="libre"?"small muted":"lock",text:note}),
+    lookEditor(v,o),
+    el("div",{class:"row",style:"margin-top:16px"},
+      (l==="libre"&&e.src==="mine")||(l==="mode"&&e.src==="mode")?el("button",{type:"button",class:"btn",onclick:()=>{lookSave(null);applyLook();render()},text:"Revenir à la charte de l'équipe"}):null,
+      S.isAdmin?el("button",{type:"button",class:"btn",onclick:()=>setView("admin"),text:"Modifier la charte de l'équipe (Back-office)"}):null));
+}
+function adminView(){
+  if(!S.isAdmin)return libView();
+  const cfg=S.cfg,c=cfg.charte;
+  const save=patch=>{S.cfg=cfgMerge(Object.assign({},S.cfg,patch));applyLook();adminNav();render();queueSet(CFG_PATH,JSON.parse(JSON.stringify(S.cfg))).catch(()=>{})};
+  const allOn=FEATURES.every(([k])=>cfg.features[k]);
+  const sw=(id,checked,on)=>el("label",{class:"switch"},el("input",{type:"checkbox",id,checked,onchange:e=>on(e.target.checked)}),el("span",{class:"tr","aria-hidden":"true"},el("i")));
+  const setC=p=>save({charte:{...c,...p}});
+  const free=cfg.liberty==="libre";
+  const radio=(val,t,d)=>el("label",{class:"radio"},el("input",{type:"radio",name:"lib",value:val,checked:cfg.liberty===val,onchange:()=>save({liberty:val})}),el("span",{},el("b",{text:t}),el("span",{class:"small muted",text:d})));
+  const T=S.boTab,nPend=S.access.filter(a=>a.status==="pending").length;
+  const TABS=[["acc","Comptes et accès"],["feat","Fonctionnalités"],["ui","Interface"],["save","Sauvegarde"]];
+  return el("div",{style:"display:grid;gap:20px"},
+    el("h2",{text:"Administration"}),
+    el("p",{class:"muted",style:"margin:-12px 0 0",text:"Réservé à l'administrateur de l'appli. Ces réglages s'appliquent à tous les comptes : personnes filmées, diffuseurs, producteurs et agences."}),
+    el("div",{class:"bo-tabs",role:"tablist","aria-label":"Back-office"},TABS.map(([k,l])=>el("button",{type:"button",role:"tab","aria-selected":String(T===k),onclick:()=>{S.boTab=k;render()}},l,k==="acc"&&nPend?" ":null,k==="acc"&&nPend?el("span",{class:"badge-n",text:nPend}):null))),
+    T==="acc"?accessTab():null,
+    T==="save"?el("section",{class:"card"},el("h3",{text:"Back-office · Sauvegarde"}),el("p",{class:"small muted",text:"Chaque soir, contrats, signatures, profils, rôles et accès sont enregistrés dans le dossier Google Drive choisi ci-dessous. Les rôles et les accès sont exclus d'une restauration par défaut."})):null,
+    T!=="feat"?null:el("section",{class:"card"},
+      el("div",{class:"row"},el("h3",{class:"grow",text:"Services et fonctionnalités"}),el("button",{type:"button",class:"btn"+(allOn?"":" primary"),onclick:()=>{const f={};for(const[k]of FEATURES)f[k]=!allOn;save({features:f})},text:allOn?"Tout désactiver":"Tout activer"})),
+      el("p",{class:"small muted",text:"Un service désactivé disparaît pour tout le monde. Les contrats et signatures déjà enregistrés sont conservés."}),
+      FEATURES.map(([k,l,d,soon])=>el("div",{class:"feat"},sw("ft-"+k,cfg.features[k],v=>save({features:{...cfg.features,[k]:v}})),
+        el("label",{for:"ft-"+k,style:"font-weight:600;cursor:pointer"},l,soon?" ":null,soon?el("span",{class:"pill idle",text:"Bientôt"}):null),el("span",{class:"d",text:d})))),
+    T!=="ui"?null:el("section",{class:"card"},el("h3",{text:"Charte visuelle de l'appli"}),
+      el("p",{class:"small muted",style:"margin:4px 0 0",text:"Choisie ici, elle s'applique à tout le monde. La liberté laissée à chacun se règle juste en dessous."}),
+      lookEditor(c,{onGlass:g=>setC({glass:g}),onTheme:k=>setC({theme:k,style:"",pal:""}),onStyle:k=>setC({style:k,pal:""}),onPal:p=>setC({pal:p})})),
+    T!=="ui"?null:el("section",{class:"card",style:"display:grid;gap:10px"},el("h3",{text:"Liberté des utilisateurs"}),
+      el("div",{class:"feat",style:"border-top:0;padding-top:0"},sw("lib-free",free,on=>save({liberty:on?"libre":"impose"})),
+        el("label",{for:"lib-free",style:"font-weight:600;cursor:pointer",text:"Chacun personnalise tout : "+(free?"oui":"non")}),
+        el("span",{class:"d",text:free?"Chacun choisit Liquid Glass, le thème et le style dans son menu Apparence. Sans choix de sa part, la charte ci-dessus s'applique.":"La charte ci-dessus est imposée. Choisissez le niveau :"})),
+      free?null:radio("impose","Charte imposée","Tout le monde voit exactement la charte choisie."),
+      free?null:radio("mode","Charte imposée, Sombre ou Lumineux au choix","Chacun peut seulement passer en Sombre ou en Lumineux.")));
+}
+
+/* ---------- boot ---------- */
+(async()=>{
+  const t=setTimeout(()=>{if(!S.loaded){S.err="L'application ne répond pas. Ouvrez-la depuis Claude, connecté à votre compte.";render()}},10000);
+  if(!window.CORE||!CORE.use){clearTimeout(t);S.err="Ouvrez cette page depuis Claude pour accéder à vos contrats.";render();return}
+  const use=n=>CORE.use(n).catch(()=>null);
+  [S.db,S.user,S.downloads]=await Promise.all([use("db"),use("user"),use("downloads")]);
+  if(!S.db||!S.user){clearTimeout(t);S.err="Connectez-vous à Claude pour utiliser l'application.";render();return}
+  try{S.uid=await S.user.id()}catch(e){}
+  if(!S.uid){clearTimeout(t);S.err="Impossible d'identifier votre compte.";render();return}
+  try{S.isAdmin=!!(await S.user.isOwner())}catch(e){S.isAdmin=false}
+  try{const m=await S.user.me();S.meName=(m&&m.name)||"";S.email=String((m&&m.email)||"").trim().toLowerCase()}catch(e){}
+  adminNav();
+  accBoot();
+  try{S.db.doc(CFG_PATH).onSnapshot(d=>{S.cfg=cfgMerge(d&&d.exists?d.data():null);applyLook();adminNav();if(S.loaded)cfgRender()},()=>{})}catch(e){}
+  let got=0;const done=()=>{if(++got>=3){S.loaded=true;clearTimeout(t);render()}};
+  const fail=e=>{clearTimeout(t);S.err="Accès aux données refusé ("+(e&&e.code||"erreur")+").";render()};
+  S.db.collection("profiles").onSnapshot(s=>{S.profiles={};s.docs.forEach(d=>S.profiles[d.id]=d.data()||{});if(S.loaded)liveRender();else done()},fail);
+  S.db.collection("ct").onSnapshot(s=>{S.ct={};s.docs.forEach(d=>S.ct[d.id]=d.data()||{});rehash().then(()=>{if(S.loaded)liveRender();else done()})},fail);
+  S.db.collection("sig").onSnapshot(s=>{S.sig={};s.docs.forEach(d=>S.sig[d.id]=d.data()||{});if(S.loaded)liveRender();else done()},fail);
+})();
+
+function liveRender(){if(S.open||S.view==="lib"||S.view==="secu"||!S.profiles[S.uid])render()}
+/* ---------- contracts ---------- */
+function allContracts(){const out=[];for(const[owner,doc]of Object.entries(S.ct))for(const[cid,c]of Object.entries(doc||{})){if(c&&typeof c==="object"&&c.createdBy===owner)out.push({...c,id:cid})}return out}
+function mine(c){return c.createdBy===S.uid||Object.values(c.parties||{}).includes(S.uid)}
+const HASH={};
+function terms(c){const k=["project","production","brand","parties","minor","minorName","guardians","supports","zone","zoneOther","purpose","start","end","paid","amount","place","createdBy"];const o={};for(const x of k)o[x]=c[x]??null;o.parties=Object.fromEntries(Object.entries(c.parties||{}).filter(([,v])=>v).sort());o.supports=[...(c.supports||[])].sort();return JSON.stringify(o)}
+async function sha(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,"0")).join("")}
+async function rehash(){for(const c of allContracts())HASH[c.id]=await sha(terms(c))}
+function required(c){return Object.entries(c.parties||{}).filter(([,u])=>u)}
+function sigOf(c,uid){const s=(S.sig[uid]||{})[c.id];if(!s)return{state:"none"};return s.hash===HASH[c.id]?{state:"ok",s}:{state:"stale",s}}
+function status(c){
+  const req=required(c);const st=req.map(([,u])=>sigOf(c,u).state);
+  if(st.includes("stale"))return{k:"bad",t:"Modifié après signature",rank:0};
+  if(st.some(x=>x!=="ok"))return{k:"idle",t:`En attente · ${st.filter(x=>x==="ok").length}/${req.length} signatures`,rank:1};
+  const d=daysTo(c.end);
+  if(d<0)return{k:"bad",t:"Expiré",rank:4};
+  if(d<=60)return{k:"warn",t:`Expire dans ${d} j`,rank:2};
+  if(daysTo(c.start)>0)return{k:"ok",t:"Signé · démarre le "+fmtD(c.start),rank:3};
+  return{k:"ok",t:"Actif",rank:3};
+}
+async function names(ids){ids=[...new Set(ids.filter(Boolean))].filter(i=>!(i in S.names));if(!ids.length)return;try{const ps=await S.user.profiles(ids);for(const i of ids)S.names[i]=(ps&&ps[i]&&ps[i].name)||""}catch(e){for(const i of ids)S.names[i]=""}}
+function partyName(uid){const p=S.profiles[uid]||{};return p.legal||S.names[uid]||"Compte invité"}
+
+/* ---------- render ---------- */
+function setView(v){S.view=v;S.open=null;S.draft=null;document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===v?"page":"false"));render();window.scrollTo(0,0)}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.v)));
+
+async function render(){
+  const app=$("#app");
+  if(S.err){app.replaceChildren(el("div",{class:"card"},el("h2",{text:"Accès impossible"}),el("p",{class:"muted",text:S.err})));return}
+  if(!S.loaded)return;
+  const me=S.profiles[S.uid];
+  await names([S.uid,...allContracts().filter(mine).flatMap(c=>Object.values(c.parties||{}))]);
+  computeRole();adminNav();
+  $("#who").textContent=(me?`${me.legal||S.names[S.uid]||"Mon compte"} · ${ROLES[me.type]}`:"Profil à compléter")+(S.role&&S.role!=="none"?" · "+PROLES[S.role]:"");
+  if(S.view==="admin"&&!S.isAdmin)S.view="lib";
+  if(S.role==="none"&&S.view!=="look"){app.replaceChildren(gateView());return}
+  if((S.view==="new"&&!feat("create"))||(S.view==="secu"&&!feat("secu")))S.view="lib";
+  if(!me&&S.view!=="secu"&&S.view!=="look"&&S.view!=="admin"){app.replaceChildren(profileView(true));return}
+  let node;
+  if(S.view==="look")node=lookView();
+  else if(S.view==="admin")node=adminView();
+  else if(S.open)node=detailView(S.open);
+  else if(S.view==="new")node=newView(S.draft||undefined);
+  else if(S.view==="profile")node=profileView(false);
+  else if(S.view==="secu")node=secuView();
+  else node=libView();
+  app.replaceChildren(...[node].flat().filter(Boolean));
+}
+
+/* ---------- profile ---------- */
+function profileView(first){
+  const p=S.profiles[S.uid]||{};
+  const err=el("p",{class:"err",role:"alert"});
+  const f=el("form",{class:"card",onsubmit:async e=>{e.preventDefault();
+    const d=Object.fromEntries(new FormData(f));
+    const out={type:d.type,legal:clip(d.legal,120),company:clip(d.company,120),email:clip(d.email,160),updatedAt:new Date().toISOString()};
+    if(!ROLES[out.type]){err.textContent="Choisissez un type de compte.";return}
+    if(out.legal.length<2){err.textContent="Indiquez votre nom légal tel qu'il figurera sur les contrats.";return}
+    if(out.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(out.email)){err.textContent="L'adresse e-mail n'est pas valide.";return}
+    try{await queueSet("profiles/"+S.uid,out);setView("lib")}catch(x){err.textContent="Enregistrement refusé. Vérifiez que l'appli vous est partagée en Contributeur."}
+  }},
+    el("h2",{text:first?"Créez votre profil":"Mon profil"}),
+    el("p",{class:"muted",text:"Ces informations apparaissent sur les autorisations que vous signez. Vous seul pouvez les modifier."}),
+    el("div",{class:"grid2"},
+      el("label",{class:"f"},"Type de compte",el("select",{name:"type",id:"p-type",required:true},el("option",{value:"",text:"Choisir…"}),Object.entries(ROLES).map(([k,v])=>el("option",{value:k,text:v,selected:p.type===k})))),
+      el("label",{class:"f"},"Nom légal (prénom et nom)",el("input",{name:"legal",id:"p-legal",value:p.legal||"",maxlength:120,required:true,autocomplete:"name"})),
+      el("label",{class:"f"},"Société (diffuseur, producteur, agence)",el("input",{name:"company",id:"p-company",value:p.company||"",maxlength:120,autocomplete:"organization"})),
+      el("label",{class:"f"},"E-mail personnel pour les rappels",el("input",{name:"email",id:"p-email",type:"email",value:p.email||"",maxlength:160,autocomplete:"email"}))),
+    err,
+    el("div",{class:"row"},el("button",{class:"btn primary",type:"submit",text:"Enregistrer"})));
+  return f;
+}
+
+/* ---------- library ---------- */
+function libView(){
+  const list=allContracts().filter(mine).map(c=>({c,st:status(c)}));
+  const n={all:list.length,wait:list.filter(x=>x.st.rank===1).length,soon:list.filter(x=>x.st.k==="warn").length,act:list.filter(x=>x.st.rank===3).length,exp:list.filter(x=>x.st.t==="Expiré").length,bad:list.filter(x=>x.st.rank===0).length};
+  const F={all:()=>true,wait:x=>x.st.rank===1,act:x=>x.st.rank===3||x.st.k==="warn",exp:x=>x.st.t==="Expiré"};
+  const rows=list.filter(F[S.filter]||F.all);
+  const k=S.sort.k,dir=S.sort.dir;
+  rows.sort((a,b)=>{const va=k==="brand"?(a.c.brand||"").toLowerCase():k==="status"?a.st.rank:a.c[k]||"",vb=k==="brand"?(b.c.brand||"").toLowerCase():k==="status"?b.st.rank:b.c[k]||"";return(va>vb?1:va<vb?-1:0)*dir});
+  const th=(key,lab)=>el("th",{scope:"col","aria-sort":k===key?(dir>0?"ascending":"descending"):null},el("button",{onclick:()=>{S.sort={k:key,dir:k===key?-dir:1};render()},text:lab+(k===key?(dir>0?" ↑":" ↓"):"")}));
+  const toSign=list.filter(x=>x.c.parties&&Object.values(x.c.parties).includes(S.uid)&&sigOf(x.c,S.uid).state!=="ok");
+  return[
+    el("div",{class:"stats"},
+      el("div",{class:"stat"},el("b",{class:"num",text:n.wait}),el("span",{class:"muted small",text:"en attente de signature"})),
+      el("div",{class:"stat"},el("b",{class:"num",text:n.act}),el("span",{class:"muted small",text:"actifs"})),
+      el("div",{class:"stat"},el("b",{class:"num",text:n.soon}),el("span",{class:"muted small",text:"expirent dans moins de 2 mois"})),
+      el("div",{class:"stat"},el("b",{class:"num",text:n.exp}),el("span",{class:"muted small",text:"expirés"}))),
+    feat("reminders")&&n.soon?el("div",{class:"banner"},el("b",{text:`Rappel : ${n.soon} autorisation${n.soon>1?"s expirent":" expire"} dans moins de 2 mois. `}),"Préparez le renouvellement ou arrêtez la diffusion à la date de fin."):null,
+    feat("reminders")&&toSign.length?el("div",{class:"banner"},el("b",{text:`${toSign.length} autorisation${toSign.length>1?"s":""} attend${toSign.length>1?"ent":""} votre signature. `}),toSign.slice(0,3).map((x,i)=>[i?" · ":"",el("a",{href:"#",onclick:e=>{e.preventDefault();S.open=x.c.id;render()},text:x.c.project})])):null,
+    n.bad?el("div",{class:"banner",style:"border-left-color:var(--bad)"},`${n.bad} contrat${n.bad>1?"s ont":" a"} été modifié${n.bad>1?"s":""} après signature : les signatures concernées ne valent plus. Ouvrez-le pour faire re-signer.`):null,
+    !feat("library")?el("div",{class:"card"},el("h2",{text:"Bibliothèque de contrats"}),el("p",{class:"muted",text:"La bibliothèque est désactivée par l'administrateur de l'appli."+(feat("reminders")&&toSign.length?" Les contrats à signer restent accessibles par le rappel ci-dessus.":"")})):
+    el("div",{class:"card"},
+      el("div",{class:"row"},el("h2",{class:"grow",text:"Bibliothèque de contrats"}),
+        el("div",{class:"chips",role:"group","aria-label":"Filtre"},[["all","Tous"],["wait","En attente"],["act","Actifs"],["exp","Expirés"]].map(([v,l])=>el("button",{class:"btn"+(S.filter===v?" primary":""),onclick:()=>{S.filter=v;render()},text:l})))),
+      rows.length?el("div",{class:"tablewrap"},el("table",{},
+        el("thead",{},el("tr",{},th("project","Projet"),th("brand","Marque / diffuseur"),th("start","Début"),th("end","Fin"),th("status","Statut"))),
+        el("tbody",{},rows.map(({c,st})=>el("tr",{class:"click",tabindex:"0",onclick:()=>{S.open=c.id;render()},onkeydown:e=>{if(e.key==="Enter"){S.open=c.id;render()}}},
+          el("td",{},el("b",{text:c.project}),el("div",{class:"small muted",text:c.production||""})),
+          el("td",{text:c.brand||"—"}),
+          el("td",{class:"num",text:c.start||"—"}),
+          el("td",{class:"num",text:c.end||"—"}),
+          el("td",{},el("span",{class:"pill "+st.k,text:st.t}))))))):
+        el("p",{class:"muted",text:list.length?"Aucun contrat dans ce filtre.":"Aucune autorisation pour l'instant. Créez la première avec « Nouvelle autorisation »."}))
+  ];
+}
+
+/* ---------- new contract ---------- */
+function personPicker(role,state){
+  const box=el("div",{class:"search"});const inp=el("input",{type:"search",id:"pick-"+role,placeholder:"Rechercher une personne…","aria-label":"Rechercher : "+ROLES[role],autocomplete:"off"});
+  const hits=el("div",{class:"hits",hidden:true,role:"listbox"});
+  const shown=el("div",{class:"picked"});
+  const paint=()=>{shown.replaceChildren();if(state.parties[role]){shown.append(el("span",{text:partyName(state.parties[role])}),state.parties[role]===S.uid?el("span",{class:"pill idle",text:"vous"}):null,state.lock===role?null:el("button",{type:"button",class:"btn small",onclick:()=>{state.parties[role]=null;paint()},text:"Retirer"}));inp.hidden=true}else inp.hidden=false};
+  let tm;const run=async()=>{let r=[];try{const x=await S.user.search(inp.value.trim());r=Array.isArray(x)?x:(x&&x.results)||[]}catch(e){}hits.replaceChildren(...r.slice(0,8).map(h=>el("button",{type:"button",role:"option",onclick:()=>{state.parties[role]=h.id;S.names[h.id]=h.name||"";hits.hidden=true;inp.value="";paint()}},el("span",{text:h.name||"Sans nom"}),S.profiles[h.id]?el("span",{class:"small muted",text:" · "+ROLES[S.profiles[h.id].type]}):null)));if(!r.length)hits.append(el("div",{class:"small muted",style:"padding:8px 10px",text:"Personne trouvée. La personne doit avoir accès à l'application."}));hits.hidden=false};
+  inp.addEventListener("focus",run);inp.addEventListener("input",()=>{clearTimeout(tm);tm=setTimeout(run,200)});
+  inp.addEventListener("blur",()=>setTimeout(()=>hits.hidden=true,200));
+  box.append(inp,hits);paint();
+  return el("label",{class:"f"},ROLES[role]+(role==="agence"?" (facultatif)":""),shown,box);
+}
+function newView(edit){
+  const me=S.profiles[S.uid];
+  const c=edit||{parties:{filme:null,diffuseur:null,producteur:null,agence:null},supports:[],zone:"France",purpose:"Publicitaire",paid:false,start:today(),end:"",minor:false};
+  const state={parties:{...c.parties},lock:edit?null:me.type};
+  if(!edit)state.parties[me.type]=S.uid;
+  const err=el("p",{class:"err",role:"alert"});
+  const minorBox=el("div",{class:"grid2",hidden:!c.minor},
+    el("label",{class:"f"},"Nom du mineur",el("input",{name:"minorName",id:"n-minorName",value:c.minorName||"",maxlength:120})),
+    el("label",{class:"f"},"Représentants légaux (noms)",el("input",{name:"guardians",id:"n-guardians",value:c.guardians||"",maxlength:200})));
+  const amountBox=el("label",{class:"f",hidden:!c.paid},"Montant de la rémunération (€ HT)",el("input",{name:"amount",id:"n-amount",type:"number",min:"0",step:"0.01",value:c.amount||""}));
+  const f=el("form",{class:"card",style:"display:grid;gap:16px",onsubmit:async e=>{e.preventDefault();
+    const d=new FormData(f);
+    const o={project:clip(d.get("project"),140),production:clip(d.get("production"),140),brand:clip(d.get("brand"),140),
+      supports:d.getAll("supports").filter(s=>SUPPORTS.includes(s)),zone:ZONES.includes(d.get("zone"))?d.get("zone"):"France",zoneOther:clip(d.get("zoneOther"),140),
+      purpose:clip(d.get("purpose"),200),start:d.get("start"),end:d.get("end"),paid:d.get("paid")==="1",amount:d.get("paid")==="1"?Math.max(0,Math.round(Number(d.get("amount"))*100)/100):0,
+      minor:d.get("minor")==="1",minorName:clip(d.get("minorName"),120),guardians:clip(d.get("guardians"),200),place:clip(d.get("place"),120),
+      parties:{filme:state.parties.filme||null,diffuseur:state.parties.diffuseur||null,producteur:state.parties.producteur||null,agence:state.parties.agence||null}};
+    if(!o.project||!o.production)return err.textContent="Indiquez le projet et la société de production.";
+    if(!o.parties.filme||!o.parties.diffuseur||!o.parties.producteur)return err.textContent="Choisissez la personne filmée, le diffuseur et le producteur.";
+    if(!o.supports.length)return err.textContent="Cochez au moins un support de diffusion.";
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(o.start)||!/^\d{4}-\d{2}-\d{2}$/.test(o.end)||o.end<=o.start)return err.textContent="La date de fin doit suivre la date de début.";
+    if(o.minor&&(!o.minorName||!o.guardians))return err.textContent="Pour un mineur, indiquez son nom et ceux de ses représentants légaux.";
+    if(o.paid&&!(o.amount>0))return err.textContent="Indiquez le montant de la rémunération.";
+    const cid=edit?edit.id:rid();
+    const doc={...(S.ct[S.uid]||{})};
+    doc[cid]={...o,createdBy:S.uid,createdAt:edit?edit.createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+    try{await queueSet("ct/"+S.uid,doc);S.draft=null;S.view="lib";S.open=cid;render()}catch(x){err.textContent="Enregistrement refusé ("+(x&&x.code||"erreur")+")."}
+  }},
+    el("h2",{text:edit?"Modifier l'autorisation":"Nouvelle autorisation de droit à l'image"}),
+    el("fieldset",{},el("legend",{text:"Projet"}),el("div",{class:"grid2"},
+      el("label",{class:"f"},"Nom du projet",el("input",{name:"project",id:"n-project",value:c.project||"",maxlength:140,required:true})),
+      el("label",{class:"f"},"Société de production",el("input",{name:"production",id:"n-production",value:c.production||(me.type==="producteur"?me.company:"")||"",maxlength:140,required:true})),
+      el("label",{class:"f"},"Marque ou diffuseur (pour le tri)",el("input",{name:"brand",id:"n-brand",value:c.brand||(me.type==="diffuseur"?me.company:"")||"",maxlength:140})))),
+    el("fieldset",{},el("legend",{text:"Parties"}),el("div",{class:"grid2"},["filme","diffuseur","producteur","agence"].map(r=>personPicker(r,state))),
+      feat("minors")||c.minor?el("label",{class:"chk",style:"justify-self:start"},el("input",{type:"checkbox",name:"minor",value:"1",id:"n-minor",checked:c.minor,onchange:e=>minorBox.hidden=!e.target.checked}),"La personne filmée est mineure : ses représentants légaux signent"):null,minorBox),
+    el("fieldset",{},el("legend",{text:"Étendue de la cession"}),
+      el("div",{class:"chips",role:"group","aria-label":"Supports de diffusion"},SUPPORTS.map((s,i)=>el("label",{class:"chk"},el("input",{type:"checkbox",name:"supports",value:s,id:"n-sup-"+i,checked:(c.supports||[]).includes(s)}),s))),
+      el("div",{class:"grid2"},
+        el("label",{class:"f"},"Zone géographique",el("select",{name:"zone",id:"n-zone"},ZONES.map(z=>el("option",{value:z,text:z,selected:c.zone===z})))),
+        el("label",{class:"f"},"Précision sur la zone",el("input",{name:"zoneOther",id:"n-zoneOther",value:c.zoneOther||"",maxlength:140})),
+        el("label",{class:"f"},"Début d'exploitation",el("input",{type:"date",name:"start",id:"n-start",value:c.start||"",required:true})),
+        el("label",{class:"f"},"Fin d'exploitation",el("input",{type:"date",name:"end",id:"n-end",value:c.end||"",required:true})),
+        el("label",{class:"f"},"Finalité",el("input",{name:"purpose",id:"n-purpose",value:c.purpose||"",maxlength:200})),
+        el("label",{class:"f"},"Rémunération",el("select",{name:"paid",id:"n-paid",onchange:e=>amountBox.hidden=e.target.value!=="1"},el("option",{value:"0",text:"Cession gratuite",selected:!c.paid}),feat("paid")||c.paid?el("option",{value:"1",text:"Cession rémunérée",selected:c.paid}):null)),
+        amountBox,
+        el("label",{class:"f"},"Lieu de signature",el("input",{name:"place",id:"n-place",value:c.place||"",maxlength:120,placeholder:"Ex. Lille"})))),
+    err,
+    el("div",{class:"row"},el("button",{class:"btn primary",type:"submit",text:edit?"Enregistrer les modifications":"Créer et inviter à signer"}),edit?el("button",{class:"btn",type:"button",onclick:()=>{S.draft=null;S.view="lib";S.open=edit.id;render()},text:"Annuler"}):null),
+    el("p",{class:"small muted",text:"Une fois la première signature posée, le contrat ne peut plus être modifié sans annuler les signatures existantes."}));
+  return f;
+}
+
+/* ---------- detail ---------- */
+function clauseText(c){
+  const zone=c.zone==="Autre (préciser)"?(c.zoneOther||"zone à préciser"):c.zone+(c.zoneOther?` (${c.zoneOther})`:"");
+  const filme=c.minor?`${c.minorName}, mineur(e), représenté(e) par ${c.guardians}`:partyName(c.parties.filme);
+  return[
+    `Entre ${filme} (ci-après « la personne filmée »)${c.parties.agence?`, représenté(e) par l'agence ${partyName(c.parties.agence)}`:""}, ${partyName(c.parties.producteur)} pour la société de production ${c.production} (ci-après « le producteur ») et ${partyName(c.parties.diffuseur)}${c.brand?` pour ${c.brand}`:""} (ci-après « le diffuseur »).`,
+    `Article 1 — Objet. La personne filmée autorise le producteur à fixer son image et sa voix dans le cadre du projet « ${c.project} », et le diffuseur à les reproduire et à les diffuser selon les conditions ci-dessous.`,
+    `Article 2 — Supports. ${c.supports.join(", ")}.`,
+    `Article 3 — Territoire. ${zone}.`,
+    `Article 4 — Durée. Du ${fmtD(c.start)} au ${fmtD(c.end)}. Au-delà, toute diffusion nouvelle est interdite sans nouvel accord écrit.`,
+    `Article 5 — Finalité. ${c.purpose||"Non précisée"}. Toute utilisation portant atteinte à la dignité ou à la réputation de la personne filmée est exclue.`,
+    `Article 6 — Contrepartie. ${c.paid?`Cession consentie moyennant ${Number(c.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})} € HT.`:"Cession consentie à titre gratuit."}`,
+    `Article 7 — Données personnelles. Les données des parties sont traitées pour la seule gestion de la présente autorisation et conservées pendant sa durée augmentée de la prescription légale. Chaque partie dispose d'un droit d'accès et de rectification.`
+  ];
+}
+function detailView(cid){
+  const c=allContracts().find(x=>x.id===cid);
+  if(!c||!mine(c)){S.open=null;return libView()}
+  const st=status(c);const myRole=Object.entries(c.parties).find(([,u])=>u===S.uid)?.[0];
+  const anySig=required(c).some(([,u])=>sigOf(c,u).state!=="none");
+  const mySig=sigOf(c,S.uid);
+  const parties=el("div",{class:"parties"},required(c).map(([r,u])=>{const s=sigOf(c,u);return el("div",{class:"party"},
+    el("span",{class:"role",text:r==="filme"&&c.minor?"Représentant légal":ROLES[r]}),el("b",{text:partyName(u)}),
+    s.state==="ok"?[el("span",{class:"pill ok",text:"Signé le "+new Date(s.s.at).toLocaleDateString("fr-FR")+(s.s.place?" à "+s.s.place:"")}),s.s.img&&/^data:image\/png;base64,/.test(s.s.img)?el("img",{src:s.s.img,alt:"Signature de "+partyName(u)}):null]:
+    s.state==="stale"?el("span",{class:"pill bad",text:"Signature à refaire"}):el("span",{class:"pill idle",text:"En attente"}))}));
+  return el("div",{class:"card",style:"display:grid;gap:18px"},
+    el("div",{class:"row"},el("button",{class:"btn",onclick:()=>{S.open=null;render()},text:"← Retour"}),el("span",{class:"grow"}),el("span",{class:"pill "+st.k,text:st.t})),
+    el("div",{},el("h2",{text:c.project}),el("p",{class:"muted small",style:"margin:4px 0 0"},"Réf. ",el("span",{class:"num",text:c.id.slice(0,8).toUpperCase()})," · empreinte ",el("span",{class:"num",text:(HASH[c.id]||"").slice(0,16)}))),
+    el("div",{class:"deed"},clauseText(c).map(t=>el("p",{text:t}))),
+    el("h3",{text:"Signatures"}),parties,
+    el("div",{class:"row"},
+      feat("signature")&&myRole&&mySig.state!=="ok"?el("button",{class:"btn primary",onclick:()=>signDialog(c),text:"Signer cette autorisation"}):null,
+      feat("pdf")?el("button",{class:"btn",onclick:()=>pdf(c),disabled:!window.jspdf,text:"Télécharger le PDF"}):null,
+      feat("edit")&&c.createdBy===S.uid?el("button",{class:"btn",onclick:()=>{if(anySig)return confirmDlg("Modifier ce contrat annulera les signatures déjà posées. Continuer ?",()=>{S.open=null;S.view="new";S.draft=c;render()});S.open=null;S.view="new";S.draft=c;render()},text:"Modifier"}):null,
+      feat("edit")&&c.createdBy===S.uid&&!anySig?el("button",{class:"btn danger",onclick:()=>confirmDlg("Supprimer définitivement cette autorisation non signée ?",async()=>{const doc={...(S.ct[S.uid]||{})};delete doc[c.id];await queueSet("ct/"+S.uid,doc);S.open=null;render()}),text:"Supprimer"}):null),
+    el("p",{class:"small muted",text:"Modèle de clauses à faire valider par un avocat avant usage commercial. Les parties reçoivent l'accès à ce contrat via l'application ; l'envoi automatique de mails arrivera avec la version hébergée."}));
+}
+function confirmDlg(msg,ok){const d=$("#dlg");d.replaceChildren(el("p",{text:msg}),el("div",{class:"row"},el("button",{class:"btn primary",onclick:async()=>{d.close();await ok()},text:"Confirmer"}),el("button",{class:"btn",onclick:()=>d.close(),text:"Annuler"})));d.showModal()}
+
+/* ---------- signature ---------- */
+function signDialog(c){
+  if(!feat("signature"))return;
+  const d=$("#dlg");const me=S.profiles[S.uid]||{};
+  const pad=el("canvas",{class:"pad","aria-label":"Zone de signature : dessinez avec la souris ou le doigt"});
+  let drawn=false,last=null;const ctx=pad.getContext("2d");
+  const size=()=>{const r=pad.getBoundingClientRect();pad.width=r.width*2;pad.height=r.height*2;ctx.scale(2,2);ctx.lineWidth=2.2;ctx.lineCap="round";ctx.strokeStyle="#151a2d"};
+  const pos=e=>{const r=pad.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+  pad.addEventListener("pointerdown",e=>{pad.setPointerCapture(e.pointerId);last=pos(e)});
+  pad.addEventListener("pointermove",e=>{if(!last)return;const p=pos(e);ctx.beginPath();ctx.moveTo(...last);ctx.lineTo(...p);ctx.stroke();last=p;drawn=true});
+  pad.addEventListener("pointerup",()=>last=null);
+  const err=el("p",{class:"err",role:"alert"});
+  const legal=el("input",{id:"s-legal",value:me.legal||"",maxlength:120});
+  const place=el("input",{id:"s-place",value:c.place||"",maxlength:120});
+  const agree=el("input",{type:"checkbox",id:"s-agree"});
+  d.replaceChildren(el("h2",{text:"Signer « "+c.project+" »"}),
+    el("p",{class:"small muted",text:"Votre signature est liée au texte exact du contrat (empreinte "+(HASH[c.id]||"").slice(0,16)+"). Si le contrat change, elle ne vaudra plus."}),
+    el("div",{style:"display:grid;gap:12px"},
+      el("label",{class:"f"},"Nom légal du signataire",legal),
+      el("label",{class:"f"},"Fait à",place),
+      el("div",{},pad,el("button",{type:"button",class:"btn small",style:"margin-top:6px",onclick:()=>{ctx.clearRect(0,0,pad.width,pad.height);drawn=false},text:"Effacer"})),
+      el("label",{class:"chk",style:"border-radius:10px"},agree,"J'ai lu l'autorisation et je l'accepte"+(c.minor&&c.parties.filme===S.uid?" en qualité de représentant légal":"")),
+      err,
+      el("div",{class:"row"},el("button",{class:"btn primary",onclick:async()=>{
+        if(clip(legal.value,120).length<2)return err.textContent="Indiquez votre nom légal.";
+        if(!clip(place.value,120))return err.textContent="Indiquez le lieu de signature.";
+        if(!drawn)return err.textContent="Dessinez votre signature.";
+        if(!agree.checked)return err.textContent="Cochez la case d'acceptation.";
+        const img=pad.toDataURL("image/png");if(img.length>120000)return err.textContent="Signature trop lourde : effacez et signez plus simplement.";
+        const mine={...(S.sig[S.uid]||{})};
+        mine[c.id]={at:new Date().toISOString(),place:clip(place.value,120),legal:clip(legal.value,120),role:Object.entries(c.parties).find(([,u])=>u===S.uid)[0],hash:HASH[c.id],img};
+        try{await queueSet("sig/"+S.uid,mine);d.close();render()}catch(x){err.textContent="Signature refusée ("+(x&&x.code||"erreur")+")."}
+      },text:"Signer"}),el("button",{class:"btn",onclick:()=>d.close(),text:"Annuler"}))));
+  d.showModal();requestAnimationFrame(size);
+}
+
+/* ---------- PDF ---------- */
+async function pdf(c){
+  if(!window.jspdf||!feat("pdf"))return;
+  const {jsPDF}=window.jspdf;const doc=new jsPDF({unit:"mm",format:"a4"});
+  let y=20;const W=170;
+  const line=(t,size=10.5,bold=false)=>{doc.setFont("helvetica",bold?"bold":"normal");doc.setFontSize(size);for(const l of doc.splitTextToSize(t,W)){if(y>280){doc.addPage();y=20}doc.text(l,20,y);y+=size*0.47}y+=2};
+  line("AUTORISATION DE DROIT À L'IMAGE",15,true);
+  line(`Réf. ${c.id.slice(0,8).toUpperCase()} · Empreinte SHA-256 : ${HASH[c.id]}`,8);
+  y+=2;for(const t of clauseText(c))line(t);
+  y+=4;line("Signatures",12,true);
+  for(const[r,u]of required(c)){const s=sigOf(c,u);if(y>250){doc.addPage();y=20}
+    line(`${r==="filme"&&c.minor?"Représentant légal":ROLES[r]} : ${s.state==="ok"?s.s.legal:partyName(u)}`,10.5,true);
+    if(s.state==="ok"){line(`Signé électroniquement le ${new Date(s.s.at).toLocaleString("fr-FR")} à ${s.s.place}`,9);if(s.s.img&&/^data:image\/png;base64,/.test(s.s.img)){try{doc.addImage(s.s.img,"PNG",20,y,50,16);y+=19}catch(e){}}}
+    else line(s.state==="stale"?"Signature invalidée (contrat modifié après signature)":"Non signé",9);}
+  const blob=doc.output("blob");const name=`autorisation-${c.project.replace(/[^\w-]+/g,"-").slice(0,40)}.pdf`;
+  if(S.downloads){try{await S.downloads.save({filename:name,data:blob})}catch(e){}}
+}
+
+/* ---------- security ---------- */
+function secuView(){
+  const ok=t=>el("li",{},el("span",{class:"pill ok",text:"OK"})," ",t);
+  const todo=t=>el("li",{},el("span",{class:"pill warn",text:"V2"})," ",t);
+  return el("div",{class:"card",style:"display:grid;gap:14px"},el("h2",{text:"Sécurité de cette version"}),
+    el("ul",{class:"plain",style:"list-style:none;padding:0"},
+      ok("Aucune clé secrète dans le code de la page."),
+      ok("Chacun ne peut écrire que son propre profil, ses propres contrats et ses propres signatures : la base le refuse pour les autres, même pour le propriétaire de l'appli."),
+      ok("Identifiants de contrats aléatoires sur 128 bits : on ne peut pas les deviner."),
+      ok("Chaque signature est liée à l'empreinte SHA-256 du texte : toute modification après coup l'invalide et s'affiche en rouge."),
+      ok("Saisies limitées en longueur et affichées sans interprétation HTML."),
+      ok("Accès réservé aux comptes Claude à qui l'appli est partagée : pas d'inscription ouverte."),
+      ok("Back-office réservé à l'administrateur (le propriétaire de l'appli) : la base refuse toute modification des services et de la charte par un autre compte."),
+      ok("Rôles, invitations et accès module par module écrits par l'administrateur seul ; chacun ne peut déposer que sa propre demande d'accès, et seul l'administrateur lit les demandes."),
+      todo("Cloisonnement de lecture par contrat : ici, toute personne ayant accès à l'appli pourrait lire les contrats des autres par des moyens techniques. La version hébergée (Supabase, sécurité ligne par ligne) le corrigera. D'ici là, ne partagez l'appli qu'avec des testeurs de confiance."),
+      todo("Envoi des mails de rappel et d'expiration, mineurs, logos, signalements, calendrier, chat, cagnotte."),
+      todo("Signature électronique qualifiée (eIDAS) si vous visez une valeur probante maximale.")));
+}
+</script>
+<!-- jp-ux-app:debut — Branchements des 20 fonctions propres à Droit à l'image -->
+<style id="jp-ux-app-css">@media print{.app{display:block!important;height:auto!important}main,.work{overflow:visible!important;height:auto!important}}body>header{background:var(--paper,var(--sheet,var(--bg,#fff)))}</style>
+<script id="jp-ux-app-js">
+window.JPUX_CONFIG={"contactEmail": "jeremypynthe@gmail.com"};
+window.JPUX_KIT={"app": "Droit à l'image", "scope": "#app", "hover": ".card", "sticky": "body>header", "copyFields": "", "hide": "header nav", "version": "21 novembre 2026", "faq": [["Comment créer une autorisation ?", "Onglet « Nouvelle autorisation » : renseignez le projet, les personnes concernées, les supports, la zone et la durée, puis enregistrez. Chaque partie reçoit le contrat à signer."], ["Que se passe-t-il si je modifie un contrat signé ?", "Les signatures déjà posées sont annulées : chaque partie doit signer à nouveau la nouvelle version. L'appli vous demande de confirmer avant."], ["Puis-je supprimer une autorisation ?", "Oui, tant qu'aucune signature n'a été posée, et seulement si vous l'avez créée. Une fenêtre vous demande de confirmer."], ["Comment obtenir le PDF ?", "Ouvrez le contrat depuis « Mes contrats » puis utilisez le bouton PDF."], ["Comment changer l'apparence ?", "Onglet « Apparence » : Liquid Glass (par défaut), puis le thème Sombre ou Lumineux, puis l'un des 10 styles Fil Rouge. Si l'administrateur impose la charte de l'appli, le menu l'indique et seuls les choix permis restent actifs."], ["Raccourcis clavier", "« / » ou Ctrl / ⌘ K : rechercher dans la page (Entrée pour le résultat suivant, Maj + Entrée pour le précédent). Échap : fermer la recherche, une fenêtre ou un menu."], ["Comment imprimer ?", "Bouton Aide › Version imprimable, ou Ctrl / ⌘ P : les menus et boutons sont masqués et le titre et la date d'impression sont ajoutés en haut."], ["Quelles données sont gardées dans mon navigateur ?", "Seulement vos réglages d'affichage et vos choix récents. Aucun cookie publicitaire ni traceur. Vous pouvez les effacer depuis Aide › Cookies et données."]]};
+</script>
+<!-- jp-ux-app:fin -->
+<!-- jp-ux-kit:debut — Compléments génériques du socle jp-ux pour les applis sans recherche ni FAQ (v1.1, 19/11/2026). Réglages : window.JPUX_KIT avant ce bloc. -->
+<style id="jp-ux-kit-css">
+.jpux-find{position:fixed;z-index:125;top:14px;left:50%;transform:translateX(-50%);width:min(94vw,520px);display:flex;gap:6px;align-items:center;background:var(--card,var(--sheet,#fff));color:var(--ink,#111);border:1px solid var(--bd,var(--line,#888));border-radius:14px;padding:8px 10px;box-shadow:0 14px 40px rgba(0,0,0,.3)}
+.jpux-find[hidden]{display:none}
+.jpux-find input{flex:1;min-width:0;font:inherit;font-size:15px;border:0;background:transparent;color:inherit;outline:none;padding:6px 4px}
+.jpux-find span{font-size:12px;font-weight:700;opacity:.7;white-space:nowrap}
+.jpux-find button{all:unset;cursor:pointer;font-weight:800;padding:6px 9px;border-radius:8px}
+.jpux-find button:hover,.jpux-find button:focus-visible{background:rgba(127,127,127,.18)}
+mark.jpux-hit{background:#ffd60a;color:#111;border-radius:3px;padding:0 1px}
+mark.jpux-hit.cur{background:#ff9f0a;outline:2px solid #ff9f0a}
+.jpux-faqwrap{position:fixed;inset:0;z-index:126;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px}
+.jpux-faqwrap[hidden]{display:none}
+.jpux-faqbox{background:var(--card,var(--sheet,#fff));color:var(--ink,#111);border:1px solid var(--bd,var(--line,#888));border-radius:16px;padding:20px 22px;width:min(640px,100%);max-height:min(86vh,760px);overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.35);position:relative}
+.jpux-faqbox>button{all:unset;cursor:pointer;position:absolute;right:14px;top:12px;font-size:22px;line-height:1;padding:4px 8px}
+.jpux-faqbox .jpux-faq{margin-top:0}
+.jpux-boot{position:fixed;inset:0;z-index:140;display:grid;place-items:center;background:var(--paper,var(--bg,#111));transition:opacity .3s}
+.jpux-boot.out{opacity:0;pointer-events:none}
+.jpux-boot div{display:grid;gap:12px;width:min(80vw,420px)}
+.jpux-boot i{display:block;height:18px;border-radius:9px;background:linear-gradient(90deg,rgba(127,127,127,.16) 25%,rgba(127,127,127,.32) 50%,rgba(127,127,127,.16) 75%) 0 0/200% 100%;animation:jpuxboot 1.1s linear infinite}
+.jpux-boot i:nth-child(1){height:46px;width:60%}.jpux-boot i:nth-child(3){width:80%}.jpux-boot i:nth-child(4){width:45%}
+@keyframes jpuxboot{to{background-position:-200% 0}}
+.jpux-cpy{all:unset;cursor:pointer;display:inline-block;margin:4px 0 0;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:999px;border:1px solid var(--bd,var(--line,#888));font-family:inherit}
+.jpux-cpy:hover{border-color:var(--red,var(--accent,#E3120B))}
+@media (prefers-reduced-motion:reduce){.jpux-boot i{animation:none}}
+@media print{
+  .jpux-float,.jpux-menu,.jpux-toasts,.jpux-cookie,.jpux-prog,.jpux-skip,.jpux-find,.jpux-faqwrap,.jpux-boot,.jpux-cpy,.jpux-copy,dialog{display:none!important}
+  html,body{background:#fff!important;color:#000!important;height:auto!important;overflow:visible!important}
+}
+</style>
+<script id="jp-ux-kit-js">
+(function(){
+  var K=Object.assign({app:"Application",scope:"main",hide:"",hover:"",sticky:"",copyFields:"",version:"",faq:[],boot:true,wrapFetch:true},window.JPUX_KIT||{});
+  var D=document;function el(t,c,x){var n=D.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n}
+  /* 6. Écran de chargement animé au démarrage */
+  if(K.boot){var bo=el("div","jpux-boot");bo.setAttribute("aria-hidden","true");var bi=el("div");for(var i=0;i<4;i++)bi.append(el("i"));bo.append(bi);D.body.append(bo);
+    var gone=false;function off(){if(gone)return;gone=true;bo.classList.add("out");setTimeout(function(){bo.remove()},350)}
+    if(D.readyState==="complete")setTimeout(off,500);else addEventListener("load",function(){setTimeout(off,350)});setTimeout(off,2500)}
+  /* 7 + 11 + 10. Survol, en-tête fixe, impression */
+  var css="";
+  if(K.hover)css+=K.hover+"{transition:transform .15s ease,box-shadow .15s ease}"+K.hover.split(",").map(function(s){return s.trim()+":hover"}).join(",")+"{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.18)}@media (prefers-reduced-motion:reduce){"+K.hover.split(",").map(function(s){return s.trim()+":hover"}).join(",")+"{transform:none}}";
+  if(K.sticky)css+=K.sticky+"{position:sticky;top:0;z-index:20}";
+  if(K.hide)css+="@media print{"+K.hide+"{display:none!important}}";
+  if(css){var st=el("style");st.id="jp-ux-kit-app";st.textContent=css;D.head.append(st)}
+  /* 3. Recherche dans la page : « / » ou Ctrl/⌘ K */
+  var fb=el("div","jpux-find");fb.hidden=true;fb.setAttribute("role","search");
+  var fi=el("input");fi.type="text";fi.setAttribute("enterkeyhint","search");fi.placeholder="Rechercher dans la page…";fi.setAttribute("aria-label","Rechercher dans la page");
+  var fc=el("span"),fp=el("button","","↑"),fn=el("button","","↓"),fx=el("button","","✕");fp.setAttribute("aria-label","Résultat précédent");fn.setAttribute("aria-label","Résultat suivant");fx.setAttribute("aria-label","Fermer la recherche");
+  fb.append(el("span","","🔎"),fi,fc,fp,fn,fx);D.body.append(fb);
+  var hits=[],cur=-1,tm=null;
+  function clear(){hits.forEach(function(m){var p=m.parentNode;if(!p)return;p.replaceChild(D.createTextNode(m.textContent),m);p.normalize()});hits=[];cur=-1;fc.textContent=""}
+  function run(){clear();var q=fi.value.trim().toLowerCase();if(q.length<2)return;var root=D.querySelector(K.scope)||D.body;
+    var w=D.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:function(n){var p=n.parentElement;if(!p||p.closest("script,style,textarea,input,select,.jpux-find,.jpux-boot"))return 2;if(!p.offsetParent&&getComputedStyle(p).position!=="fixed")return 2;return n.nodeValue.toLowerCase().indexOf(q)>=0?1:2}}),ns=[];
+    while(w.nextNode()&&ns.length<400)ns.push(w.currentNode);
+    ns.forEach(function(n){var t=n.nodeValue,l=t.toLowerCase(),i=0,f=D.createDocumentFragment(),j;while((j=l.indexOf(q,i))>=0){f.append(t.slice(i,j));var m=el("mark","jpux-hit",t.slice(j,j+q.length));hits.push(m);f.append(m);i=j+q.length}f.append(t.slice(i));n.parentNode.replaceChild(f,n)});
+    fc.textContent=hits.length?"":"0 résultat";if(hits.length)go(0)}
+  function go(i){if(!hits.length)return;if(cur>=0&&hits[cur])hits[cur].classList.remove("cur");cur=(i+hits.length)%hits.length;hits[cur].classList.add("cur");hits[cur].scrollIntoView({block:"center"});fc.textContent=(cur+1)+" / "+hits.length}
+  function open(){fb.hidden=false;fi.focus();fi.select()}
+  function close(){clear();fb.hidden=true}
+  fi.addEventListener("input",function(){clearTimeout(tm);tm=setTimeout(run,180)});
+  fi.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();go(cur+(e.shiftKey?-1:1))}else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close()}});
+  fp.onclick=function(){go(cur-1)};fn.onclick=function(){go(cur+1)};fx.onclick=close;
+  /* 19 + 18. FAQ dépliable dans une fenêtre, avec la date de mise à jour */
+  var fw=el("div","jpux-faqwrap");fw.hidden=true;var fbx=el("div","jpux-faqbox");fbx.id="jpuxFaqBox";fbx.setAttribute("role","dialog");fbx.setAttribute("aria-modal","true");fbx.setAttribute("aria-label","Questions fréquentes");
+  var fcl=el("button","","×");fcl.setAttribute("aria-label","Fermer");fcl.onclick=function(){fw.hidden=true};fbx.append(fcl);fw.append(fbx);D.body.append(fw);
+  fw.addEventListener("click",function(e){if(e.target===fw)fw.hidden=true});D.addEventListener("keydown",function(e){if(e.key==="Escape"&&!fw.hidden)fw.hidden=true});
+  if(K.version){new MutationObserver(function(){var s=fbx.querySelector(".jpux-faq");if(s&&!s.querySelector(".jpux-maj")){s.append(el("p","jpux-maj",K.app+" — mis à jour le "+K.version))}}).observe(fbx,{childList:true,subtree:true})}
+  /* 9. Boutons copier sous les champs de texte utiles (prompts, légendes…) */
+  function copyFields(){if(!K.copyFields)return;D.querySelectorAll(K.copyFields).forEach(function(t){if(t.dataset.jpuxCpy)return;t.dataset.jpuxCpy="1";var b=el("button","jpux-cpy","Copier");b.type="button";b.setAttribute("aria-label","Copier le texte de ce champ");b.onclick=function(e){e.preventDefault();e.stopPropagation();var v=t.value!=null?t.value:t.textContent;if(!v.trim()){window.JPUX&&JPUX.toast("Rien à copier pour l'instant","info");return}window.JPUX&&JPUX.copy(v,b)};t.insertAdjacentElement("afterend",b)})}
+  var ct=null;new MutationObserver(function(){clearTimeout(ct);ct=setTimeout(copyFields,120)}).observe(D.body,{childList:true,subtree:true});setTimeout(copyFields,300);
+  /* 8. Barre de progression pendant les échanges réseau */
+  if(K.wrapFetch&&window.fetch&&!window.fetch.jpux){var f0=window.fetch;var f1=function(){window.JPUX&&JPUX.busy(true);return f0.apply(this,arguments).finally(function(){window.JPUX&&JPUX.busy(false)})};f1.jpux=true;window.fetch=f1}
+  /* Réglages transmis au socle */
+  window.JPUX_CONFIG=Object.assign({app:K.app,main:K.scope,search:".jpux-find input",openSearch:open,faqTarget:"#jpuxFaqBox",showFaq:function(){fw.hidden=false},faq:K.faq,printTitle:function(){return K.app}},window.JPUX_CONFIG||{});
+  window.JPUX_KIT_API={openSearch:open,closeSearch:close,openFaq:function(){fw.hidden=false}};
+})();
+</script>
+<!-- jp-ux-kit:fin -->
+<!-- jp-ux:debut — Socle des 20 fonctions communes (v1.1, 19/11/2026). Réglages : window.JPUX_CONFIG avant ce bloc. -->
+<style id="jp-ux-css">
+.jpux-skip{position:fixed;left:12px;top:-60px;z-index:100;background:var(--red,#E3120B);color:#fff;padding:10px 16px;font-weight:800;text-decoration:none;border-radius:8px;transition:top .15s}
+.jpux-skip:focus{top:12px}
+.jpux-prog{position:fixed;left:0;top:0;height:3px;width:100%;z-index:90;pointer-events:none;transform-origin:0 50%;transform:scaleX(0);background:var(--red,#E3120B)}
+.jpux-prog.busy{transform:none;background:linear-gradient(90deg,transparent 0,var(--red,#E3120B) 40%,transparent 80%) 0 0/50% 100% repeat-x;animation:jpuxbusy 1s linear infinite}
+@keyframes jpuxbusy{to{background-position:100% 0}}
+.jpux-float{position:fixed;z-index:6;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--bd,#888);background:var(--card,#fff);color:var(--ink,#111);border-radius:999px;min-width:44px;height:44px;padding:0 14px;font:inherit;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.18);transition:transform .15s,opacity .2s,background .15s}
+.jpux-float:hover{transform:translateY(-2px);border-color:var(--red,#E3120B)}
+.jpux-top{right:28px;bottom:calc(88px + env(safe-area-inset-bottom));opacity:0;pointer-events:none;padding:0}
+.jpux-top.on{opacity:1;pointer-events:auto}
+.jpux-help{left:calc(var(--jpux-rail,0px) + 20px);bottom:calc(24px + env(safe-area-inset-bottom))}
+.jpux-menu{position:fixed;z-index:7;left:calc(var(--jpux-rail,0px) + 20px);bottom:calc(76px + env(safe-area-inset-bottom));background:var(--card,#fff);color:var(--ink,#111);border:1px solid var(--bd,#888);border-radius:14px;padding:8px;min-width:230px;box-shadow:0 14px 34px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:2px}
+.jpux-menu a,.jpux-menu button{all:unset;cursor:pointer;padding:10px 12px;border-radius:9px;font-weight:700;font-size:14px;display:flex;gap:10px;align-items:center}
+.jpux-menu a:hover,.jpux-menu button:hover,.jpux-menu a:focus-visible,.jpux-menu button:focus-visible{background:var(--soft,#eee)}
+.jpux-toasts{position:fixed;z-index:120;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:min(92vw,460px)}
+.jpux-toast{pointer-events:auto;background:#111;color:#fff;border-radius:12px;padding:12px 16px;font-weight:700;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:flex;gap:10px;align-items:center;animation:jpuxin .2s ease-out;border-left:5px solid #30d158}
+.jpux-toast.err{border-left-color:#ff453a}.jpux-toast.info{border-left-color:#64d2ff}
+.jpux-toast button{all:unset;cursor:pointer;margin-left:auto;opacity:.7;padding:0 4px}
+@keyframes jpuxin{from{opacity:0;transform:translateY(8px)}}
+.jpux-cookie{position:fixed;z-index:110;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom));width:min(94vw,640px);background:var(--card,#fff);color:var(--ink,#111);border:1px solid var(--bd,#888);border-radius:16px;padding:14px 16px;box-shadow:0 14px 40px rgba(0,0,0,.3);display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:13.5px}
+.jpux-cookie p{margin:0;flex:1 1 300px}
+.jpux-cookie button{font:inherit;font-weight:800;border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid var(--bd,#888);background:transparent;color:inherit}
+.jpux-cookie button.ok{background:var(--red,#E3120B);border-color:var(--red,#E3120B);color:#fff}
+.jpux-modal{position:fixed;inset:0;z-index:130;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:16px}
+.jpux-modal>div{background:var(--card,#fff);color:var(--ink,#111);border:1px solid var(--bd,#888);border-radius:16px;padding:20px;max-width:420px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.jpux-modal h2{margin:0 0 8px;font-size:19px}.jpux-modal p{margin:0 0 16px;color:var(--mid,#666)}
+.jpux-modal .row{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.jpux-modal button{font:inherit;font-weight:800;border-radius:10px;padding:10px 18px;cursor:pointer;border:1px solid var(--bd,#888);background:transparent;color:inherit;min-height:44px}
+.jpux-modal button.go{background:var(--red,#E3120B);border-color:var(--red,#E3120B);color:#fff}
+.jpux-modal button.go.danger{background:#b3261e;border-color:#b3261e}
+.jpux-copy{all:unset;cursor:pointer;margin-left:8px;font-size:11.5px;font-weight:800;padding:2px 8px;border-radius:999px;border:1px solid var(--bd,#888);color:var(--ink,#111);font-family:inherit;vertical-align:1px}
+.jpux-copy:hover{border-color:var(--red,#E3120B)}
+.jpux-pw{position:relative;display:block}.jpux-pw input{padding-right:44px!important}
+.jpux-pw button{all:unset;cursor:pointer;position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:800;padding:4px 6px}
+.jpux-faq{margin-top:28px}
+.jpux-faq details{border:1px solid var(--bd,#888);background:var(--card,#fff);border-radius:12px;margin-bottom:8px}
+.jpux-faq summary{cursor:pointer;padding:13px 16px;font-weight:800;list-style:none;display:flex;justify-content:space-between;gap:12px}
+.jpux-faq summary::-webkit-details-marker{display:none}
+.jpux-faq summary::after{content:"+";font-size:20px;line-height:1;transition:transform .2s}
+.jpux-faq details[open] summary::after{transform:rotate(45deg)}
+.jpux-faq details>div{padding:0 16px 14px;color:var(--mid,#666);line-height:1.5}
+.jpux-skel{position:relative;overflow:hidden;background:var(--soft,#eee)!important;border-color:transparent!important;color:transparent!important;min-height:88px;border-radius:10px}
+.jpux-skel::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.35) 50%,transparent 80%);transform:translateX(-100%);animation:jpuxsk 1.2s ease-in-out infinite}
+@keyframes jpuxsk{to{transform:translateX(100%)}}
+.jpux-maj{font-size:12px;color:var(--mid,#666);font-weight:600}
+.jpux-in{animation:jpuxin .25s ease-out both}
+@media (prefers-reduced-motion:reduce){.jpux-in,.jpux-toast,.jpux-skel::after,.jpux-prog.busy{animation:none!important}.jpux-float{transition:none}}
+@media (max-width:760px){.jpux-top{right:16px;bottom:calc(150px + env(safe-area-inset-bottom))}.jpux-help{left:16px;bottom:calc(84px + env(safe-area-inset-bottom))}.jpux-menu{left:16px;bottom:calc(136px + env(safe-area-inset-bottom))}.jpux-toasts{bottom:auto;top:calc(12px + env(safe-area-inset-top))}.jpux-cookie{bottom:calc(84px + env(safe-area-inset-bottom))}}
+@media print{
+  .jpux-skip,.jpux-prog,.jpux-float,.jpux-menu,.jpux-toasts,.jpux-cookie,.jpux-modal,.jpux-copy,.jpux-noprint{display:none!important}
+  .jpux-print-head{display:block!important;font:700 12px/1.4 system-ui,sans-serif;margin:0 0 10px;border-bottom:1px solid #000;padding-bottom:6px}
+  *{box-shadow:none!important;animation:none!important;transition:none!important}
+}
+.jpux-print-head{display:none}
+</style>
+<script id="jp-ux-js">
+(function(){
+  if(window.JPUX)return;
+  var C=Object.assign({app:"Application",scroll:null,search:null,openSearch:null,contactEmail:"",contactLabel:"Écrire à l'administrateur",faq:[],faqTarget:null,privacy:"",copySel:"",stickySel:"",railWidth:0,utmKey:"jpux_utm",printTitle:null},window.JPUX_CONFIG||{});
+  var D=document,R=D.documentElement;
+  function el(t,c,x){var n=D.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n}
+  function ls(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+  function scroller(){return (C.scroll&&D.querySelector(C.scroll))||D.scrollingElement||R}
+  var prefersNoMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* 16. Messages : succès, erreur, info */
+  var box=el("div","jpux-toasts");box.setAttribute("role","status");box.setAttribute("aria-live","polite");
+  function toast(msg,kind,ms){var t=el("div","jpux-toast "+(kind||""));t.append(el("span","",(kind==="err"?"⚠️ ":kind==="info"?"ℹ️ ":"✓ ")+msg));var x=el("button","","×");x.setAttribute("aria-label","Fermer");x.onclick=function(){t.remove()};t.append(x);box.append(t);setTimeout(function(){t.remove()},ms||(kind==="err"?7000:3200));return t}
+
+  /* 17. Fenêtre de confirmation */
+  function confirmBox(o){o=typeof o==="string"?{msg:o}:o||{};return new Promise(function(res){
+    var m=el("div","jpux-modal"),b=el("div");b.setAttribute("role","alertdialog");b.setAttribute("aria-modal","true");
+    b.append(el("h2","",o.title||"Confirmer"),el("p","",o.msg||"Êtes-vous sûr ?"));
+    var row=el("div","row"),no=el("button","",o.cancel||"Annuler"),ok=el("button","go"+(o.danger?" danger":""),o.ok||"Confirmer");
+    function end(v){m.remove();D.removeEventListener("keydown",k,true);res(v)}
+    function k(e){if(e.key==="Escape"){e.stopPropagation();e.preventDefault();end(false)}}
+    no.onclick=function(){end(false)};ok.onclick=function(){end(true)};m.onclick=function(e){if(e.target===m)end(false)};
+    row.append(no,ok);b.append(row);m.append(b);D.body.append(m);D.addEventListener("keydown",k,true);ok.focus();
+  })}
+
+  /* 8. Barre de progression (défilement + travail en cours) */
+  var prog=el("div","jpux-prog");prog.setAttribute("aria-hidden","true");var busyN=0;
+  function busy(on){busyN=Math.max(0,busyN+(on?1:-1));prog.classList.toggle("busy",busyN>0);if(!busyN)onScroll()}
+  /* 4. Bouton retour en haut */
+  var topB=el("button","jpux-float jpux-top");topB.type="button";topB.setAttribute("aria-label","Revenir en haut");topB.innerHTML='<span aria-hidden="true" style="font-size:20px">↑</span>';
+  topB.onclick=function(){var s=scroller();(s===R?window:s).scrollTo({top:0,behavior:prefersNoMotion?"auto":"smooth"});};
+  function onScroll(){var s=scroller(),y=s===R?window.scrollY:s.scrollTop,h=(s===R?R.scrollHeight-innerHeight:s.scrollHeight-s.clientHeight);topB.classList.toggle("on",y>400);if(!busyN)prog.style.transform="scaleX("+(h>0?Math.min(1,y/h):0)+")"}
+
+  /* 20. Bouton contact / aide flottant */
+  var help=el("button","jpux-float jpux-help");help.type="button";help.setAttribute("aria-haspopup","menu");help.setAttribute("aria-expanded","false");help.innerHTML='<span aria-hidden="true">💬</span><span>Aide</span>';
+  var menu=null;
+  function closeMenu(){if(menu){menu.remove();menu=null;help.setAttribute("aria-expanded","false")}}
+  help.onclick=function(e){e.stopPropagation();if(menu)return closeMenu();menu=el("div","jpux-menu");menu.setAttribute("role","menu");
+    var sub=encodeURIComponent("["+C.app+"] Demande d'aide"),body=encodeURIComponent("Bonjour,\n\nPage : "+location.href.split("?")[0]+"\n\nMa question : ");
+    var a=el("a","",(C.contactEmail?"✉️ ":"✉️ ")+C.contactLabel);a.href="mailto:"+(C.contactEmail||"")+"?subject="+sub+"&body="+body;a.setAttribute("role","menuitem");menu.append(a);
+    if(D.querySelector(".jpux-faq")){var f=el("button","","❓ Questions fréquentes");f.setAttribute("role","menuitem");f.onclick=function(){closeMenu();if(C.showFaq)C.showFaq();setTimeout(function(){var q=D.querySelector(".jpux-faq");if(q){q.scrollIntoView({behavior:prefersNoMotion?"auto":"smooth",block:"start"});var d=q.querySelector("details");if(d)d.open=true}},60)};menu.append(f)}
+    var p=el("button","","🖨️ Version imprimable");p.setAttribute("role","menuitem");p.onclick=function(){closeMenu();print()};menu.append(p);
+    var c=el("button","","🍪 Cookies et données");c.setAttribute("role","menuitem");c.onclick=function(){closeMenu();cookie(true)};menu.append(c);
+    D.body.append(menu);help.setAttribute("aria-expanded","true");menu.querySelector("a,button").focus()};
+  D.addEventListener("click",function(e){if(menu&&!menu.contains(e.target))closeMenu()});
+  D.addEventListener("keydown",function(e){if(e.key==="Escape")closeMenu()});
+
+  /* 2. Bandeau cookies (information, aucun traceur) */
+  function cookie(force){if(!force&&ls("jpux_cookies"))return;var old=D.querySelector(".jpux-cookie");if(old)old.remove();
+    var b=el("div","jpux-cookie");b.setAttribute("role","region");b.setAttribute("aria-label","Cookies");
+    b.append(el("p","",C.privacy||"Cette appli n'utilise aucun cookie publicitaire ni traceur. Seuls vos réglages d'affichage (thème, densité, choix récents) sont gardés dans ce navigateur."));
+    var ok=el("button","ok","J'ai compris");ok.onclick=function(){ls("jpux_cookies",{ok:true,at:new Date().toISOString()});b.remove()};
+    var no=el("button","","Effacer mes réglages");no.onclick=async function(){if(await confirmBox({title:"Effacer vos réglages ?",msg:"Thème, densité et préférences de ce navigateur seront remis à zéro.",ok:"Effacer",danger:true})){try{Object.keys(localStorage).forEach(function(k){localStorage.removeItem(k)})}catch(e){}ls("jpux_cookies",{ok:true,at:new Date().toISOString()});location.reload()}};
+    b.append(no,ok);D.body.append(b)}
+
+  /* 14. Suivi UTM (source de la visite, gardée dans ce navigateur) */
+  /* Les paramètres utm_* sont lus dans l'adresse (?utm_…) et après le n° dans l'ancre (#INV-0001&utm_…), comme sur les QR des étiquettes. */
+  function utmParams(){var o={},q=new URLSearchParams(location.search),h=location.hash||"",i=h.search(/[&?]/),hq=new URLSearchParams(i>=0?h.slice(i+1):"");
+    ["source","medium","campaign","content","term"].forEach(function(k){var v=q.get("utm_"+k)||hq.get("utm_"+k);if(v)o[k]=v});return o}
+  function track(o){o=Object.assign({},o||{});if(!Object.keys(o).length)return;o.at=new Date().toISOString();o.page=location.pathname;var h=(location.hash||"").slice(1).split(/[&?]/)[0];if(h)o.cible=decodeURIComponent(h);var l=ls(C.utmKey)||[];l.unshift(o);ls(C.utmKey,l.slice(0,100))}
+  var utmDone=false;function utm(){if(!utmDone){utmDone=true;track(utmParams())}return ls(C.utmKey)||[]}
+  function tag(url,src,med,camp){try{var u=new URL(url,location.href);u.searchParams.set("utm_source",src||"app");u.searchParams.set("utm_medium",med||"lien");if(camp)u.searchParams.set("utm_campaign",camp);return u.toString()}catch(e){return url}}
+
+  /* 9. Boutons copier */
+  async function copy(text,btn){try{await navigator.clipboard.writeText(text)}catch(e){var t=el("textarea");t.value=text;D.body.append(t);t.select();try{D.execCommand("copy")}catch(_){}t.remove()}if(btn){var o=btn.textContent;btn.textContent="Copié ✓";setTimeout(function(){btn.textContent=o},1500)}toast("Copié dans le presse-papiers")}
+  function enhance(root){
+    if(C.copySel)root.querySelectorAll(C.copySel).forEach(function(n){if(n.dataset.jpuxCopy)return;var v=(n.textContent||"").trim();if(!v||v==="—")return;n.dataset.jpuxCopy="1";var b=el("button","jpux-copy","Copier");b.type="button";b.setAttribute("aria-label","Copier "+v);b.onclick=function(e){e.stopPropagation();copy(v,b)};n.append(b)});
+    root.querySelectorAll("[data-jpux-copy-text]").forEach(function(n){if(n.dataset.jpuxBound)return;n.dataset.jpuxBound="1";n.addEventListener("click",function(e){e.stopPropagation();copy(n.getAttribute("data-jpux-copy-text"),n)})});
+    /* 13. Afficher le mot de passe */
+    root.querySelectorAll('input[type="password"]').forEach(function(i){if(i.dataset.jpuxPw)return;i.dataset.jpuxPw="1";var w=el("span","jpux-pw");i.parentNode.insertBefore(w,i);w.append(i);var b=el("button","","Afficher");b.type="button";b.setAttribute("aria-label","Afficher le mot de passe");b.onclick=function(){var s=i.type==="password";i.type=s?"text":"password";b.textContent=s?"Masquer":"Afficher";b.setAttribute("aria-label",s?"Masquer le mot de passe":"Afficher le mot de passe")};w.append(b)});
+  }
+
+  /* 19. FAQ dépliable */
+  function faq(){if(!C.faq.length||!C.faqTarget)return;var t=D.querySelector(C.faqTarget);if(!t||t.querySelector(".jpux-faq"))return;
+    var s=el("section","jpux-faq");s.id="faq";s.append(el("h3","","Questions fréquentes"));
+    C.faq.forEach(function(q){var d=el("details"),sm=el("summary","",q[0]),dv=el("div","",q[1]);d.append(sm,dv);s.append(d)});t.append(s)}
+
+  /* 10. Version imprimable : en-tête avec titre et date */
+  var ph=el("div","jpux-print-head");
+  addEventListener("beforeprint",function(){ph.textContent=(C.printTitle?C.printTitle():C.app)+" — imprimé le "+new Date().toLocaleString("fr-FR")});
+
+  /* 3. Recherche : touche « / » ou Ctrl/⌘ K */
+  D.addEventListener("keydown",function(e){var tg=e.target,typing=tg&&(tg.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName));
+    if(((e.key==="/"&&!typing)||(e.key.toLowerCase()==="k"&&(e.metaKey||e.ctrlKey)))&&C.search){e.preventDefault();if(C.openSearch)C.openSearch();setTimeout(function(){var i=D.querySelector(C.search);if(i){i.focus();i.select&&i.select()}},30)}});
+
+  /* 16. Erreurs inattendues et connexion */
+  var lastErr=0;function oops(){if(Date.now()-lastErr<4000)return;lastErr=Date.now();toast("Un problème est survenu. Réessayez ; si ça continue, utilisez le bouton Aide.","err")}
+  addEventListener("error",function(e){if(e&&e.target&&e.target!==window)return;oops()});
+  addEventListener("unhandledrejection",function(){oops()});
+  addEventListener("offline",function(){toast(window.JPOFF?"Connexion perdue : vous pouvez continuer, vos modifications seront envoyées dès son retour.":"Connexion perdue : vos modifications ne seront pas enregistrées tant qu'elle n'est pas revenue.",window.JPOFF?"info":"err",9000)});
+  addEventListener("online",function(){toast("Connexion rétablie.","info")});
+
+  function start(){
+    /* 12. Lien d'accès direct au contenu */
+    var main=(C.main&&D.querySelector(C.main))||D.querySelector("main");
+    if(main){if(!main.id)main.id="contenu";if(!main.hasAttribute("tabindex"))main.setAttribute("tabindex","-1");var sk=el("a","jpux-skip","Aller au contenu");sk.href="#"+main.id;sk.onclick=function(e){e.preventDefault();main.focus();main.scrollIntoView()};D.body.prepend(sk)}
+    if(C.railWidth)R.style.setProperty("--jpux-rail",C.railWidth+"px");
+    D.body.append(prog,topB,help,box);D.body.prepend(ph);
+    var s=scroller();(s===R?window:s).addEventListener("scroll",onScroll,{passive:true});onScroll();
+    utm();faq();enhance(D);cookie(false);
+    var tm=null;new MutationObserver(function(){clearTimeout(tm);tm=setTimeout(function(){enhance(D);faq()},80)}).observe(D.body,{childList:true,subtree:true});
+  }
+  window.JPUX={toast:toast,confirm:confirmBox,busy:busy,copy:copy,utm:utm,utmParams:utmParams,track:track,tagUrl:tag,cookies:function(){cookie(true)},config:C,version:"1.1"};
+  if(D.readyState==="loading")D.addEventListener("DOMContentLoaded",start);else start();
+})();
+</script>
+<!-- jp-ux:fin -->
+<script id="jp-ux-app-droit">
+(function(){if(typeof queueSet!=="function")return;var q0=queueSet,okT=null;
+  /* 8 + 15 + 16. Enregistrements : barre de progression, confirmation discrète, erreur claire */
+  queueSet=function(path,data){window.JPUX&&JPUX.busy(true);var p=q0(path,data);p.then(function(){clearTimeout(okT);okT=setTimeout(function(){window.JPUX&&JPUX.toast("Enregistré")},400)},function(){window.JPUX&&JPUX.toast("L'enregistrement a échoué. Vérifiez la connexion et réessayez.","err")}).finally(function(){window.JPUX&&JPUX.busy(false)});return p};
+})();
+</script>
+<script src="lg.js"></script>
+<script src="bkx.js"></script>
+</body>
+</html>
+
+</body></html>
