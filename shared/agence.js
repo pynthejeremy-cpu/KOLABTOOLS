@@ -1,9 +1,9 @@
-/* ---- KOLABTOOLS : identification unique + charte DAM Studio ----
+/* ---- KOLABTOOLS : identification unique + charte Refraction ----
    Même fichier pour l'appli fusionnée (« suite ») et pour chaque outil vendu seul (« solo »).
    - Connexion par e-mail + mot de passe (aucune connexion Google), comptes créés sur invitation (code envoyé par e-mail).
    - Équipe : tous les outils. Clients : seulement les outils ouverts pour eux (DAM Studio, Droit à l'image).
    - Le nom de l'agence et l'adresse de l'appli sont réglés à la première connexion (vendable à d'autres agences).
-   - Charte DAM Studio posée par défaut sur tous les outils (désactivable par appareil). */
+   - Charte Refraction posée par défaut sur tous les outils (désactivable par appareil). */
 (function () {
   "use strict";
   if (window.JP_AUTH) return;
@@ -19,7 +19,7 @@
   var CFG = { org: "", url: window.KOLAB_URL || "" };
 
   /* =========================================================
-     1. Charte DAM Studio (base commune)
+     1. Charte Refraction (base commune)
      ========================================================= */
   var fonts = document.createElement("link");
   fonts.rel = "stylesheet";
@@ -397,7 +397,7 @@
     var m = document.createElement("div"); m.id = "jp-menu"; m.hidden = true;
     m.innerHTML = '<div class="jp-meta"><b style="color:#eef1f7">' + esc(current.name) + "</b><br>" + esc(current.email) + "<br>" + esc(org()) + "</div>" +
       (API.isAdmin() ? '<button type="button" data-j="acc">👥 Comptes et accès</button>' : "") +
-      '<button type="button" data-j="charte">◐ Charte DAM : ' + (charteOn ? "activée" : "désactivée") + '</button><button type="button" data-j="out">↩ Se déconnecter</button>';
+      '<button type="button" data-j="charte">◐ Charte Refraction : ' + (charteOn ? "activée" : "désactivée") + '</button><button type="button" data-j="out">↩ Se déconnecter</button>';
     p.addEventListener("click", function (e) { e.stopPropagation(); m.hidden = !m.hidden; });
     m.addEventListener("click", function (e) {
       var b = e.target.closest("button"); if (!b) return; m.hidden = true;

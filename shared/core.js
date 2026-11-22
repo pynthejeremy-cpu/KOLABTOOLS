@@ -4,7 +4,7 @@
      barre de navigation entre les outils ;
    - « solo » (outil vendu seul, window.KOLAB_MODE = "solo" posé par build.py) : base propre à l'outil, sans préfixe,
      pas de barre de navigation.
-   La connexion unique et la charte DAM Studio (agence.js) sont chargées dans les deux modes. */
+   La connexion unique et la charte Refraction (agence.js) sont chargées dans les deux modes. */
 (function () {
   "use strict";
   if (window.CORE_READY) return;
@@ -13,7 +13,7 @@
   var MOD = (me && me.getAttribute("data-mod")) || "hub";
   var SUITE = window.KOLAB_MODE !== "solo";
   var PRE = SUITE ? "m/" + MOD + "/" : "";
-  /* identification unique + charte DAM Studio (agence.js) */
+  /* identification unique + charte Refraction (agence.js) */
   if (document.readyState === "loading") document.write('<script src="agence.js" data-mod="' + MOD + '"><\/script>');
   else { var ag = document.createElement("script"); ag.src = "agence.js"; ag.setAttribute("data-mod", MOD); document.head.appendChild(ag); }
   var MODS = [

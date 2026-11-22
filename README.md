@@ -8,7 +8,7 @@ On modifie un outil **une fois**, dans `tools/<outil>/` ; `build.py` produit la 
 ```
 shared/            socle commun à tous les outils
   core.js          base de données, administrateurs, menu « Outils » — deux modes : suite / solo
-  agence.js        connexion unique (e-mail + mot de passe, sur invitation), gestion des comptes, charte DAM Studio
+  agence.js        connexion unique (e-mail + mot de passe, sur invitation), gestion des comptes, charte Refraction
   lg.js            couche Liquid Glass
   bkx.js           sauvegarde quotidienne (Planning, Droit à l'image)
 tools/

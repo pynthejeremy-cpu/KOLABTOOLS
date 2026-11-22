@@ -544,7 +544,7 @@ const LIBERTY = [["imposed", "Charte imposée", "Tout le monde voit la charte ch
 const ADM_DEF = { feat: {}, charte: { glass: true, theme: "a", style: "" }, liberty: "free", lastLiberty: "mode" };
 function admNorm(a) { a = a || {}; return { feat: Object.assign({}, a.feat), charte: Object.assign({}, ADM_DEF.charte, a.charte), liberty: LIBERTY.some(l => l[0] === a.liberty) ? a.liberty : "free", lastLiberty: a.lastLiberty === "imposed" ? "imposed" : "mode" }; }
 let ADM = (() => { try { return admNorm(JSON.parse(localStorage.getItem(ADKEY))); } catch (e) { return admNorm(null); } })();
-const feat = (k) => k !== "styles" && (!ADM.feat || ADM.feat[k] !== false); /* styles Fil Rouge retirés : la charte DAM Studio s'applique à tous */
+const feat = (k) => k !== "styles" && (!ADM.feat || ADM.feat[k] !== false); /* styles Fil Rouge retirés : la charte Refraction s'applique à tous */
 function saveAdm() { try { localStorage.setItem(ADKEY, JSON.stringify(ADM)); } catch (e) {} if (GAS) save();
   // Avec la base partagée, la config vaut pour tout le monde (document cfg/admin, écrit par l’administrateur).
   if (db && isAdmin()) db.doc("cfg/admin").set(Object.assign({}, ADM, { updatedAt: new Date().toISOString(), by: myId || null })).catch(() => snack("Réglage non partagé : seuls les éditeurs du planning peuvent modifier la config de l’équipe.")); }

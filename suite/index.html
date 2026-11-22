@@ -121,7 +121,7 @@ pre.inv{white-space:pre-wrap;font:12.5px/1.5 Manrope,system-ui,sans-serif;backgr
   <h3>Réglages</h3>
   <div class="row"><label for="sGlass">Liquid Glass</label><select id="sGlass"><option value="on">Verre dépoli</option><option value="soft">Verre léger</option><option value="off">Désactivé</option></select></div>
   <div class="row"><label for="sBg">Fond vivant</label><select id="sBg"><option value="on">Animé</option><option value="off">Fixe</option></select></div>
-  <div class="row"><label for="sCharte">Charte DAM Studio sur tous les outils</label><select id="sCharte"><option value="on">Activée</option><option value="off">Désactivée (style propre à chaque outil)</option></select></div>
+  <div class="row"><label for="sCharte">Charte Refraction sur tous les outils</label><select id="sCharte"><option value="on">Activée</option><option value="off">Désactivée (style propre à chaque outil)</option></select></div>
   <div class="row"><label for="sPar">Parallaxe et relief 3D</label><select id="sPar"><option value="on">Activés</option><option value="off">Désactivés</option></select></div>
   <p class="note" style="color:var(--mid);font-size:13px;margin:14px 0">Ces réglages valent pour cet appareil. Chaque outil garde son propre menu Apparence et sa sauvegarde quotidienne (dossier réglable, réimport d'une ancienne sauvegarde).</p>
   <button class="btn" type="button" id="dlgClose">Fermer</button>
@@ -257,7 +257,7 @@ function paintAdm() {
   if ($("#accBtn")) $("#accBtn").onclick = () => A.manage();
 }
 if (window.JP_AUTH) JP_AUTH.onReady(u => { if (u) $("#hello").textContent = `Bonjour ${u.name.split(" ")[0]} — vos outils, reliés par projet.`; paintAdm(); });
-/* charte DAM sur tous les outils (réglage par appareil) */
+/* charte Refraction sur tous les outils (réglage par appareil) */
 try { $("#sCharte").value = localStorage.getItem("jp-charte") === "off" ? "off" : "on"; } catch (e) {}
 $("#sCharte").addEventListener("change", e => { try { localStorage.setItem("jp-charte", e.target.value); } catch (er) {} });
 </script>
