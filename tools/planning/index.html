@@ -174,6 +174,8 @@ td.fold.busy{background:repeating-linear-gradient(-45deg,var(--red) 0 2px,transp
 .selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:max(18px,calc(env(safe-area-inset-bottom) + 12px));margin:0;width:max-content;max-width:calc(100vw - 24px);display:flex;flex-wrap:wrap;justify-content:center;gap:10px 12px;align-items:center;background:var(--band);color:var(--band-t);padding:8px 10px 8px 18px;box-shadow:inset 0 -3px 0 var(--red),0 10px 30px rgba(0,0,0,.35);z-index:2147482000;font-weight:800;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%)}
 .selbar{-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%)}
 :root[data-da-sombre] .selbar{background:color-mix(in srgb,var(--da-fond,#07090f) 84%,transparent)}
+.csort{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px}
+.pj-cur{flex:none;font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:color-mix(in srgb,var(--red) 18%,transparent);color:var(--red);white-space:nowrap}
 .selbar .btn.opt{background:transparent;color:var(--band-t);border:1px dashed currentColor}
 @media print{.selbar{display:none!important}}
 .selbar .btn.ghost{color:var(--band-t)}
@@ -779,16 +781,16 @@ function wireSelection(table) {
 /* ---------- module de réservation ---------- */
 function openBooking(keys, existing, preset) {
   const dlg = $("#dlg");
-  const st = existing ? { ...existing.form } : { client: D.clients[0] ? D.clients[0].id : "", project: "", status: preset || "opt", placeType: "studio", plateau: "", ext: "", vehicles: [], mats: [] };
-  if (!st.project) { const c = client(st.client); st.project = c && c.projects[0] ? c.projects[0].id : ""; }
+  const st = existing ? { ...existing.form } : { client: sortedClients()[0] ? sortedClients()[0].id : "", project: "", status: preset || "opt", placeType: "studio", plateau: "", ext: "", vehicles: [], mats: [] };
+  if (!st.project) { const c = client(st.client), sp = sortedProjects(c); st.project = sp[0] ? sp[0].id : ""; }
   const hum = keys.map(k => k.split("|")).map(([rid, di, h]) => ({ r: resById(rid), di, h: +h }));
   const dates = [...new Set(hum.map(x => x.di + "|" + x.h))];
   function draw() {
     const c = client(st.client);
-    const cSel = el("select", { class: "sel", onchange: (e) => { if (e.target.value === "__new") { st.adding = "client"; } else { st.client = e.target.value; const cc = client(st.client); st.project = cc && cc.projects[0] ? cc.projects[0].id : ""; } draw(); } },
-      D.clients.map(x => el("option", { value: x.id, selected: x.id === st.client, text: x.name })), el("option", { value: "__new", text: "+ Nouveau client…" }));
+    const cSel = el("select", { class: "sel", onchange: (e) => { if (e.target.value === "__new") { st.adding = "client"; } else { st.client = e.target.value; const cc = client(st.client), sp = sortedProjects(cc); st.project = sp[0] ? sp[0].id : ""; } draw(); } },
+      sortedClients().map(x => el("option", { value: x.id, selected: x.id === st.client, text: x.name })), el("option", { value: "__new", text: "+ Nouveau client…" }));
     const pSel = el("select", { class: "sel", onchange: (e) => { if (e.target.value === "__new") { st.adding = "project"; } else st.project = e.target.value; draw(); } },
-      (c ? c.projects : []).map(p => el("option", { value: p.id, selected: p.id === st.project, text: p.name })), el("option", { value: "__new", text: "+ Nouveau projet…" }));
+      sortedProjects(c).map(p => el("option", { value: p.id, selected: p.id === st.project, text: p.name + (activity(b => b.project === p.id).cur ? " · en cours" : "") })), el("option", { value: "__new", text: "+ Nouveau projet…" }));
     const plateaux = D.res.filter(r => r.group === "studio");
     const place = st.placeType === "studio"
       ? el("select", { class: "sel", onchange: (e) => { st.plateau = e.target.value; draw(); } }, el("option", { value: "", text: "— Aucun plateau —" }), plateaux.map(p => el("option", { value: p.id, selected: p.id === st.plateau, text: `${p.sub} · ${p.name}` })))
@@ -873,21 +875,42 @@ const randomColor = () => PALETTE[D.clients.length % PALETTE.length];
 /* ============================================================
    Clients
    ============================================================ */
+/* ---------- Classement des clients (historique) et des projets (dernier en cours) ---------- */
+const CSORT_K = "pl-client-sort";
+function cSortMode() { try { return localStorage.getItem(CSORT_K) || "recent"; } catch (e) { return "recent"; } }
+function activity(pred) { const t = iso(new Date()); let last = "", cur = false, n = 0; for (const b of D.bookings) if (pred(b)) { n++; if (b.date > last) last = b.date; if (b.date >= t) cur = true; } return { last, cur, n }; }
+function sortedProjects(c) {
+  if (!c) return [];
+  const L = c.projects.map((p, i) => ({ p, i, a: activity(b => b.project === p.id) }));
+  if (cSortMode() === "az") return L.sort((x, y) => x.p.name.localeCompare(y.p.name, "fr")).map(x => x.p);
+  if (cSortMode() === "created") return L.map(x => x.p);
+  return L.sort((x, y) => (y.a.cur - x.a.cur) || y.a.last.localeCompare(x.a.last) || (y.i - x.i)).map(x => x.p);
+}
+function sortedClients() {
+  const L = D.clients.map((c, i) => ({ c, i, a: activity(b => b.client === c.id) }));
+  if (cSortMode() === "az") return L.sort((x, y) => x.c.name.localeCompare(y.c.name, "fr")).map(x => x.c);
+  if (cSortMode() === "created") return L.map(x => x.c);
+  return L.sort((x, y) => (y.a.cur - x.a.cur) || y.a.last.localeCompare(x.a.last) || (y.i - x.i)).map(x => x.c);
+}
+const fmtShort = d => { try { return new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }); } catch (e) { return d; } };
 function renderClients() {
-  const grid = el("div", { class: "cgrid" }, D.clients.map(c => {
+  const mode = cSortMode();
+  const sortSeg = el("div", { class: "seg", role: "group", "aria-label": "Classer les clients" }, [["recent", "Historique récent"], ["az", "A → Z"], ["created", "Ordre de création"]].map(([k, l]) => el("button", { "aria-pressed": String(mode === k), onclick: () => { try { localStorage.setItem(CSORT_K, k); } catch (e) {} renderClients(); } }, l)));
+  const grid = el("div", { class: "cgrid" }, sortedClients().map(c => {
+    const ca = activity(b => b.client === c.id);
     const nb = D.bookings.filter(b => b.client === c.id && resById(b.rid) && resById(b.rid).group === "rh").length;
     const pIn = el("input", { class: "in", placeholder: "Nouveau projet / opération" });
     return el("article", { class: "ccard", style: { "--cc": c.color } },
       el("div", { class: "ccard-h" }, el("input", { type: "color", class: "sw", value: c.color, title: "Couleur sur le planning", onchange: (e) => { c.color = e.target.value; save(); renderClients(); } }),
         el("input", { class: "in", value: c.name, "aria-label": "Nom du client", onchange: (e) => { c.name = e.target.value; save(); } }),
         armed(el("button", { class: "ib", title: "Supprimer le client (cliquer deux fois)" }, icon("delete")), "OK ?", () => { D.clients = D.clients.filter(x => x !== c); D.bookings = D.bookings.filter(b => b.client !== c.id); save(); renderClients(); snack(nb ? `${c.name} supprimé, ${nb} réservation(s) annulée(s)` : `${c.name} supprimé`); })),
-      el("div", { class: "ccard-b" }, el("p", { class: "note", text: `${c.projects.length} projet(s) · ${nb} demi-journée(s) équipe` }),
-        c.projects.map(p => el("div", { class: "proj" }, icon("movie"), el("input", { class: "in", value: p.name, onchange: (e) => { p.name = e.target.value; save(); } }), allow("project") ? el("button", { class: "ib open", title: "Ouvrir le projet : détail, brief, rétroplanning", onclick: () => openProject(c.id, p.id) }, icon("open_in_new")) : null, el("button", { class: "ib", title: "Retirer", onclick: () => { c.projects = c.projects.filter(x => x !== p); D.bookings = D.bookings.filter(b => b.project !== p.id); save(); renderClients(); } }, icon("close")))),
+      el("div", { class: "ccard-b" }, el("p", { class: "note", text: `${c.projects.length} projet(s) · ${nb} demi-journée(s) équipe` + (ca.last ? ` · ${ca.cur ? "en cours, jusqu’au" : "dernier passage le"} ${fmtShort(ca.last)}` : "") }),
+        sortedProjects(c).map(p => { const pa = activity(b => b.project === p.id); return el("div", { class: "proj", title: pa.last ? (pa.cur ? "En cours · jusqu’au " : "Dernière date : ") + fmtShort(pa.last) : "Pas encore réservé" }, icon("movie"), el("input", { class: "in", value: p.name, onchange: (e) => { p.name = e.target.value; save(); } }), pa.cur ? el("span", { class: "pj-cur", text: "En cours" }) : null, allow("project") ? el("button", { class: "ib open", title: "Ouvrir le projet : détail, brief, rétroplanning", onclick: () => openProject(c.id, p.id) }, icon("open_in_new")) : null, el("button", { class: "ib", title: "Retirer", onclick: () => { c.projects = c.projects.filter(x => x !== p); D.bookings = D.bookings.filter(b => b.project !== p.id); save(); renderClients(); } }, icon("close"))); }),
         el("div", { class: "proj" }, icon("add"), pIn, el("button", { class: "btn sm", onclick: () => { if (!pIn.value.trim()) return; c.projects.push({ id: uid(), name: pIn.value.trim() }); save(); renderClients(); } }, "Ajouter"))));
   }));
   const nIn = el("input", { class: "in", placeholder: "Nom du client" }), cIn = el("input", { type: "color", class: "sw", value: randomColor() });
   view(hero("BASE CLIENTS", "Clients", "Chaque client a sa couleur sur le planning, et ses projets s’affichent dans le module de réservation."),
-    el("div", { class: "page" }, el("section", { class: "sec" }, el("h2", { text: "Nouveau client" }), el("div", { class: "add" }, el("div", { class: "field" }, el("span", { class: "lbl", text: "Nom" }), nIn), el("div", { class: "field", style: { flex: "0 0 auto" } }, el("span", { class: "lbl", text: "Couleur" }), cIn),
+    el("div", { class: "page" }, el("div", { class: "csort" }, el("span", { class: "lbl", text: "Classer les clients" }), sortSeg), el("section", { class: "sec" }, el("h2", { text: "Nouveau client" }), el("div", { class: "add" }, el("div", { class: "field" }, el("span", { class: "lbl", text: "Nom" }), nIn), el("div", { class: "field", style: { flex: "0 0 auto" } }, el("span", { class: "lbl", text: "Couleur" }), cIn),
       el("button", { class: "btn", onclick: () => { if (!nIn.value.trim()) return; D.clients.push({ id: uid(), name: nIn.value.trim(), color: cIn.value, projects: [] }); save(); renderClients(); snack("Client créé"); } }, icon("add"), "Créer"))), grid));
 }
 
