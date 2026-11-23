@@ -204,7 +204,6 @@ label.f{min-width:0}label.f select,label.f input{min-width:0;width:100%;max-widt
     <button data-v="new">Nouvelle autorisation</button>
     <button data-v="profile">Mon profil</button>
     <button data-v="secu">Sécurité</button>
-    <button data-v="look">Apparence</button>
     <button data-v="admin" hidden>Back-office</button>
   </nav>
 </header>
@@ -586,6 +585,7 @@ async function render(){
   await names([S.uid,...allContracts().filter(mine).flatMap(c=>Object.values(c.parties||{}))]);
   computeRole();adminNav();
   $("#who").textContent=(me?`${me.legal||S.names[S.uid]||"Mon compte"} · ${ROLES[me.type]}`:"Profil à compléter")+(S.role&&S.role!=="none"?" · "+PROLES[S.role]:"");
+  if(S.view==="look")S.view="lib"; /* menu Apparence retiré : la charte Refraction s'applique à tous */
   if(S.view==="admin"&&!S.isAdmin)S.view="lib";
   if(S.role==="none"&&S.view!=="look"){app.replaceChildren(gateView());return}
   if((S.view==="new"&&!feat("create"))||(S.view==="secu"&&!feat("secu")))S.view="lib";
