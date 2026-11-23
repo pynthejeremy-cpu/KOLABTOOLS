@@ -307,6 +307,7 @@ body:not(.light) .toast{background:rgba(22,26,38,.85)}
 .otp input{width:44px;height:52px;text-align:center;font-size:20px;font-weight:800;border-radius:12px;background:var(--glass);border:1px solid var(--stroke);outline:none}
 
 .seg{display:flex;gap:4px;padding:4px;border-radius:13px;background:var(--glass);flex-wrap:wrap}
+.hsort{margin:-6px 0 18px;gap:10px;align-items:center;flex-wrap:wrap}.hsort .seg button{white-space:nowrap}.pdates{display:block;margin-top:2px}
 .seg button{flex:1;padding:8px 10px;border-radius:10px;font-weight:700;font-size:12.5px;color:var(--ink2)}
 .seg button.on{background:var(--ink);color:var(--bg)}
 .swatch{width:52px;height:52px;border-radius:15px;border:2px solid transparent;position:relative;overflow:hidden}
@@ -696,12 +697,23 @@ function render(){
 }
 
 /* ---------- HOME ---------- */
+/* dates d'un projet : création = date déclarée ou plus ancienne trace ; modification = plus récente trace (fichiers, versions, annotations) */
+function pDates(p){
+  const ds=[]; JSON.stringify(p).replace(/"(?:date|created|updated|at|uploaded)":"(\d{4}-\d{2}-\d{2}[^"]*)"/g,(m,d)=>{ds.push(d);return m;});
+  ds.sort(); const first=(p.phases&&p.phases[0]&&p.phases[0].start)||ds[0]||'';
+  return {created:p.created||(p.phases&&p.phases[0]&&p.phases[0].start)||ds[0]||first, modified:p.updated&&p.updated>(ds[ds.length-1]||'')?p.updated:(ds[ds.length-1]||p.created||first)};
+}
+const HSORT=[['modified','Dernière modification'],['created','Date de création'],['name','Nom']];
 function vHome(){
   const vp=visibleProjects().filter(p=>!S.q||(p.name+client(p.clientId).name).toLowerCase().includes(S.q.toLowerCase()));
+  if(!S.hsort){try{S.hsort=localStorage.getItem('dam-hsort')||''}catch(e){}} const hs=HSORT.some(x=>x[0]===S.hsort)?S.hsort:'modified', dir=S.hdir===1?1:-1;
+  const key=p=>hs==='name'?p.name.toLowerCase():pDates(p)[hs]||'';
+  vp.sort((a,b)=>(key(a)>key(b)?1:key(a)<key(b)?-1:0)*(hs==='name'?-dir:dir));
   const byC={}; vp.forEach(p=>(byC[p.clientId]=byC[p.clientId]||[]).push(p));
   const hello=isTeam()?`Bonjour ${esc(S.user.name)}`:`Bonjour ${esc(S.user.name)}`;
   let h=`<div class="top"><div><h1>${hello}<br><i>${isTeam()?'tous les projets':'vos projets'}</i></h1><p class="sub">${isTeam()?`${S.projects.length} projets · ${S.clients.length} clients · ${openCount()} retours à traiter`:`${vp.length} projet${vp.length>1?'s':''} partagé${vp.length>1?'s':''} avec vous`}</p></div>
-    <div class="row"><div class="search"><input class="input" placeholder="Rechercher un projet, un client…" value="${esc(S.q)}" data-input="q">${I.search}</div>${isTeam()?`<button class="btn pri" data-act="newProject">${I.plus}Nouveau projet</button>`:''}</div></div>`;
+    <div class="row"><div class="search"><input class="input" placeholder="Rechercher un projet, un client…" value="${esc(S.q)}" data-input="q">${I.search}</div>${isTeam()?`<button class="btn pri" data-act="newProject">${I.plus}Nouveau projet</button>`:''}</div></div>
+    <div class="row hsort" role="group" aria-label="Trier les projets"><span class="muted" style="font-size:12px">Trier par client selon</span><div class="seg">${HSORT.map(([k,l])=>`<button class="${hs===k?'on':''}" data-act="hsort" data-v="${k}" aria-pressed="${hs===k}">${l}</button>`).join('')}</div><button class="btn sm" data-act="hdir" title="Inverser l'ordre">${hs==='name'?(dir<0?'A → Z':'Z → A'):(dir<0?'Plus récent d’abord':'Plus ancien d’abord')}</button></div>`;
   if(!vp.length) h+=`<div class="empty glass card">Aucun projet pour l’instant.</div>`;
   Object.keys(byC).forEach(cid=>{ const c=client(cid);
     h+=`<section class="client"><div class="client-h"><div class="clogo" style="background:${c.col}">${esc(c.name[0])}</div><div><b>${esc(c.name)}</b><div class="muted" style="font-size:12px">${byC[cid].length} projet(s)${isTeam()?` · ${c.contacts.length} contacts`:''}</div></div></div><div class="grid">`;
@@ -710,7 +722,7 @@ function vHome(){
       h+=`<article class="pcard glass" data-act="openProject" data-id="${p.id}">
         <div class="pcover">${imgs.map(s=>`<img src="${s}" alt="">`).join('')}</div>
         ${p.closed?`<span class="tag ok closed-ribbon">✓ Clôturé</span>`:''}
-        <div class="pbody"><b>${esc(p.name)}</b><span class="muted" style="font-size:12px">${esc(p.desc)}</span>
+        <div class="pbody"><b>${esc(p.name)}</b><span class="muted" style="font-size:12px">${esc(p.desc)}</span><span class="muted pdates" style="font-size:11px">${(()=>{const d=pDates(p),f=x=>x?new Date(x).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'—';return `Créé le ${f(d.created)} · modifié le ${f(d.modified)}`})()}</span>
         <div class="bar"><i style="width:${pr}%"></i></div>
         <div class="pmeta"><span class="tag ${p.closed?'ok':'v'}">${esc(ph.name)}</span>${isTeam()?`<div class="avs">${p.members.slice(0,4).map(e=>av(e,26)).join('')}</div>`:`<span class="muted" style="font-size:12px">${pr}% validé</span>`}</div></div></article>`; });
     h+=`</div></section>`; });
@@ -1034,6 +1046,8 @@ const ACT={
   invite:()=>{L={step:'invite',email:'design@arc-intl.com',pw:''};renderLogin();},
   loginBack:()=>{L={step:'start'};renderLogin();},
   logout:()=>{if(window.JP_AUTH&&window.JP_AUTH.user){window.JP_AUTH.logout();return;}S.user=null;L={step:'start'};renderLogin();},
+  hsort:d=>{S.hsort=d.v;S.hdir=-1;try{localStorage.setItem('dam-hsort',d.v)}catch(e){}render();},
+  hdir:()=>{S.hdir=S.hdir===1?-1:1;render();},
   go:d=>{S.view=d.v;if(d.v!=='project')S.projectId=null;render();$('#main').scrollTop=0;},
   openProject:d=>{S.view='project';S.projectId=d.id;S.ptab='files';render();$('#main').scrollTop=0;},
   ptab:d=>{S.ptab=d.t;render();},
@@ -1046,7 +1060,7 @@ const ACT={
   share:d=>{S.ptab='access';render();},
   upload:()=>$('#fileIn').click(),
   newProject:()=>modal(`<h3>Nouveau projet</h3><p class="muted">Le dossier est créé automatiquement dans le Drive partagé.</p><form data-form="newProject" id="npf"><label class="f">Client</label><select class="input" name="c">${S.clients.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select><label class="f">Nom du projet</label><input class="input" name="n" required placeholder="Ex. Campagne Noël"><label class="f">Ou pointer vers un dossier Drive existant (optionnel)</label><input class="input" name="d" placeholder="https://drive.google.com/drive/folders/…"></form>`,`<button class="btn" data-act="closeModal">Annuler</button><button class="btn pri" data-act="submitNP">Créer</button>`),
-  submitNP:()=>{const f=$('#npf');if(!f.n.value.trim())return f.n.focus();const c=client(f.c.value);const p={id:uid('p'),clientId:c.id,name:f.n.value.trim(),desc:'Nouveau projet',drive:f.d.value.trim()?'Drive partagé › dossier lié ('+f.d.value.trim().slice(-12)+')':`Drive partagé › 01_CLIENTS › ${c.name.toUpperCase()} › 2026_${f.n.value.trim().toUpperCase().replace(/\s+/g,'_')}`,members:[],perm:{dl:true,validate:true},phases:phases([['Brief',[11,23],[11,26]],['Production',[11,27],[12,5]],['V1',[12,6],[12,9]],['Retours V1',[12,10],[12,12]],['Validé',[12,13],[12,14]]]),cur:0,assets:[]};S.projects.unshift(p);closeModal();S.view='project';S.projectId=p.id;S.ptab='access';render();toast('Projet créé · dossier Drive créé',I.drive);},
+  submitNP:()=>{const f=$('#npf');if(!f.n.value.trim())return f.n.focus();const c=client(f.c.value);const p={id:uid('p'),clientId:c.id,name:f.n.value.trim(),desc:'Nouveau projet',drive:f.d.value.trim()?'Drive partagé › dossier lié ('+f.d.value.trim().slice(-12)+')':`Drive partagé › 01_CLIENTS › ${c.name.toUpperCase()} › 2026_${f.n.value.trim().toUpperCase().replace(/\s+/g,'_')}`,members:[],perm:{dl:true,validate:true},phases:phases([['Brief',[11,23],[11,26]],['Production',[11,27],[12,5]],['V1',[12,6],[12,9]],['Retours V1',[12,10],[12,12]],['Validé',[12,13],[12,14]]]),cur:0,assets:[],created:new Date().toISOString(),updated:new Date().toISOString()};S.projects.unshift(p);closeModal();S.view='project';S.projectId=p.id;S.ptab='access';render();toast('Projet créé · dossier Drive créé',I.drive);},
   toggleMember:d=>{const p=proj(S.projectId),i=p.members.indexOf(d.e);if(i>=0){p.members.splice(i,1);render();toast('Accès retiré · la personne ne voit plus ce projet');}else{p.members.push(d.e);render();inviteModal(p,d.e);}},
   togglePerm:d=>{const p=proj(S.projectId);p.perm[d.k]=!p.perm[d.k];render();},
   toggleTodo:(d,e)=>{e.stopPropagation();const a=S.projects.flatMap(p=>p.assets).find(a=>a.id===d.a);let n=a.annotations.find(n=>n.id===d.n);if(n)n.done=!n.done;else if(a.type==='ecom'){const it=a.items[+d.n.split('_')[1]];it.fixed=!it.fixed;}if(V){$('#vpanel').innerHTML=vPanel();drawAnns();}else render();renderShell();},
