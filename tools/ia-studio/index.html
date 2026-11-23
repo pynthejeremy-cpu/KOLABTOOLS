@@ -898,6 +898,8 @@ header.hero.coll-head>.coll-btn{position:absolute;right:16px;top:16px;background
 .g-h span{font-size:15px;font-weight:900}
 .g-h.we{opacity:.7}
 .g-h.today{background:var(--red);color:#fff}
+.gantt.dense .g-h{font-size:9.5px}.gantt.dense .g-h b{letter-spacing:0}.gantt.dense .g-h span{font-size:12px}.gantt.dense .g-who{padding-left:8px;padding-right:6px}.gantt.dense .g-bar span{font-size:11px}
+body:has(#core-nav) .gantt-wrap{margin-right:30px}
 .g-h.dl{box-shadow:inset 0 -4px 0 var(--red)}
 .g-corner{position:sticky;left:0;z-index:3;align-items:flex-start;padding-left:12px}
 .g-who{position:sticky;left:0;z-index:2;display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--bd);border-right:2px solid var(--bd);grid-column:1}
@@ -7845,8 +7847,8 @@ function renderPlanning() {
       el("button", { class: "btn ghost sm", onclick: () => exportICS() }, icon("event"), "Google Agenda (.ics)"),
       S.uid ? el("button", { class: "btn ghost sm", onclick: () => exportICS(S.uid) }, icon("person"), "Mes tâches (.ics)") : null)));
   // gantt
-  const colMin = S.planSpan > 14 ? 30 : 56;
-  const g = el("div", { class: "gantt", style: `grid-template-columns:200px repeat(${days.length}, minmax(${colMin}px, 1fr));min-width:${200 + days.length * colMin}px`, role: "grid", "aria-label": "Diagramme de Gantt" });
+  const dense = S.planSpan > 14, colMin = dense ? 22 : 56, nameW = dense ? 150 : 200; /* 4 semaines : tient dans l'écran sans défilement */
+  const g = el("div", { class: "gantt" + (dense ? " dense" : ""), style: `grid-template-columns:${nameW}px repeat(${days.length}, minmax(${colMin}px, 1fr));min-width:${nameW + days.length * colMin}px`, role: "grid", "aria-label": "Diagramme de Gantt" });
   g.append(el("div", { class: "g-h g-corner" }, el("span", { text: "Équipe" })));
   days.forEach(dd => { const D = dparse(dd); g.append(el("div", { class: "g-h" + (isWeekend(dd) ? " we" : "") + (dd === today() ? " today" : "") + (dd === P.deadline ? " dl" : "") }, el("b", { text: D.toLocaleDateString("fr-FR", { weekday: S.planSpan > 14 ? "narrow" : "short" }) }), el("span", { text: String(D.getDate()) }))); });
   // versions row
