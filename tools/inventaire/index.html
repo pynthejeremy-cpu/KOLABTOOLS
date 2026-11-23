@@ -564,7 +564,7 @@ html body .mgrid .dcard.islate{border-color:var(--casse)!important;box-shadow:in
   <button class="rail-grp grp-btn" data-act="grp" data-g="suivi" aria-expanded="true">Suivi<span class="chv">▾</span></button>
   <button data-g="suivi" data-bo="exports" class="rail-btn" data-act="rentals"><span class="ms">movie</span><span class="l">Par projet</span></button>
   <button data-g="suivi" data-bo="exports" class="rail-btn" data-act="sheet"><span class="ms">qr_code_2</span><span class="l">Étiquettes</span></button>
-  <button data-g="suivi" data-bo="exports" class="rail-btn" data-act="gsheet"><span class="ms">table_view</span><span class="l">Sheets</span></button>
+  <!-- Sheets : onglet des Réglages -->
   <button data-g="suivi" data-bo="exports" class="rail-btn" data-act="csv"><span class="ms">download</span><span class="l">CSV</span></button>
   <button class="rail-grp grp-btn" data-act="grp" data-g="sav" aria-expanded="true">SAV<span class="chv">▾</span></button>
   <button data-g="sav" data-bo="tickets" class="rail-btn tab" data-act="tickets" data-nav="tickets"><span class="ms">support_agent</span><span class="l">Tickets</span></button>
@@ -837,9 +837,19 @@ function applyGlass(u){
   root.style.setProperty("--g-blur",g.blur+"px");root.style.setProperty("--g-alpha",(g.alpha/100).toFixed(2));root.style.setProperty("--g-a",g.alpha+"%");root.style.setProperty("--g-hl",(g.hl/100).toFixed(2));
 }
 const useg=(key,opts,val)=>`<div class="useg" role="group">${opts.map(([k,l])=>`<button data-uact="${key}" data-k="${k}" aria-pressed="${String(val)===String(k)}">${l}</button>`).join("")}</div>`;
+let setPane="gen";
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("[data-setact=tab]");if(!t)return;setPane=t.dataset.k;renderSettings()});
 function renderSettings(){
   const me=uiMine(),e=uiEff(),adm=myRole==="admin"&&!!db,hasMine=Object.keys(me).length>0;
-  let h=`<div class="adm-box">`;
+  const canSheets=boCan("exports");if(!canSheets&&setPane==="sheets")setPane="gen";
+  const tabs=canSheets?`<div class="seg adm-tabs" role="tablist"><button role="tab" aria-pressed="${setPane==="gen"}" data-setact="tab" data-k="gen"><span class="ms">tune</span>Général</button><button role="tab" aria-pressed="${setPane==="sheets"}" data-setact="tab" data-k="sheets"><span class="ms">table_view</span>Google Sheets</button></div>`:"";
+  if(setPane==="sheets"){
+    $("#setPage").innerHTML=tabs+`<div class="adm-box"><section class="adm-sec"><h2>Export vers Google Sheets</h2>
+      <p class="note">Crée dans votre Google Drive une nouvelle feuille Google Sheets avec tous les articles et leurs infos (n° d'inventaire, catégorie, marque, modèle, n° de série, état, statut, détenteur, lieux, notes…). C'est une copie à date : relancez l'export pour la mettre à jour.</p>
+      <div class="row-b"><button class="btn pri sm" data-act="gsheet"><span class="ms">table_view</span>Créer la feuille Google Sheets</button></div></section></div>`;
+    return;
+  }
+  let h=tabs+`<div class="adm-box">`;
   /* section Apparence retirée : la charte Refraction s'applique à tous les outils */
   h+=`<section class="adm-sec"><h2>Affichage</h2><div class="ui-grid">
     <div class="field"><span class="lbl">Densité</span>${useg("dens",[["comfort","Confortable"],["compact","Compacte"]],e.density)}</div>
