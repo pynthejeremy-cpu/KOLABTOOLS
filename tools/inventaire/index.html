@@ -1514,10 +1514,11 @@ async function decideAccess(id,how){
 }
 function accErr(m){const el=$("#acc");if(el)el.insertAdjacentHTML("afterbegin",`<div class="notice err">${esc(m)}</div>`)}
 function inviteMail(iv){
-  const subject="Invitation : Inventaire M la créative";
+  const ORG=(window.JP_AUTH&&JP_AUTH.orgName)||"M la créative";
+  const subject="Invitation : Inventaire "+ORG;
   const body=`Bonjour${iv.name?" "+iv.name:""},
 
-Vous êtes invité(e) à rejoindre l'application « Inventaire M la créative » avec le rôle : ${ROLES[iv.role]} (${ROLE_HINT[iv.role]}).
+Vous êtes invité(e) à rejoindre l'application « Inventaire ${ORG} » avec le rôle : ${ROLES[iv.role]} (${ROLE_HINT[iv.role]}).
 
 1. Ouvrez ce lien : ${APP_URL}
 2. Connectez-vous à Claude avec votre adresse professionnelle : ${iv.email} (créez un compte gratuit si besoin, avec cette même adresse).
@@ -1525,7 +1526,7 @@ Vous êtes invité(e) à rejoindre l'application « Inventaire M la créative »
 
 À bientôt,
 ${myName||""}`;
-  const html=`<p>Bonjour${iv.name?" "+esc(iv.name):""},</p><p>Vous êtes invité(e) à rejoindre l'application <b>Inventaire M la créative</b> avec le rôle <b>${esc(ROLES[iv.role])}</b> (${esc(ROLE_HINT[iv.role])}).</p><ol><li>Ouvrez ce lien : <a href="${APP_URL}">${APP_URL}</a></li><li>Connectez-vous à Claude avec votre adresse professionnelle : <b>${esc(iv.email)}</b> (créez un compte gratuit si besoin, avec cette même adresse).</li><li>Vos accès sont activés automatiquement à votre première connexion.</li></ol><p>À bientôt,<br>${esc(myName||"")}</p>`;
+  const html=`<p>Bonjour${iv.name?" "+esc(iv.name):""},</p><p>Vous êtes invité(e) à rejoindre l'application <b>Inventaire ${esc(ORG)}</b> avec le rôle <b>${esc(ROLES[iv.role])}</b> (${esc(ROLE_HINT[iv.role])}).</p><ol><li>Ouvrez ce lien : <a href="${APP_URL}">${APP_URL}</a></li><li>Connectez-vous à Claude avec votre adresse professionnelle : <b>${esc(iv.email)}</b> (créez un compte gratuit si besoin, avec cette même adresse).</li><li>Vos accès sont activés automatiquement à votre première connexion.</li></ol><p>À bientôt,<br>${esc(myName||"")}</p>`;
   return {subject,body,html};
 }
 async function mailInvite(iv){

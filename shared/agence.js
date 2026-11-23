@@ -191,6 +191,7 @@
   var API = {
     get user() { return pub(current); },
     get org() { return org(); },
+    get orgName() { return CFG.org || ""; },
     suite: SUITE, mod: MOD, modNames: MODS, clientMods: CLIENT_MODS,
     isAdmin: function () { return !!(current && current.kind === "team" && current.role === "admin"); },
     isTeam: function () { return !!(current && current.kind === "team"); },
@@ -232,7 +233,7 @@
       if (normMail(email) === current.email) throw new Error("Vous ne pouvez pas supprimer votre propre compte.");
       var d = await db(); await d.doc(U + keyOf(email)).delete();
     },
-    setOrg: async function (o) { needAdmin(); var d = await db(); Object.assign(CFG, o); await d.doc(CF).set({ org: CFG.org || "", url: CFG.url || "", domain: CFG.domain || "" }); },
+    setOrg: async function (o) { needAdmin(); var d = await db(); Object.assign(CFG, o); await d.doc(CF).set({ org: CFG.org || "", url: CFG.url || "", domain: CFG.domain || "" }); brandAll(); },
     sendMail: async function (to, subject, body) {
       var m = window.claude && window.claude.use ? await window.claude.use("mcp").catch(function () { return null; }) : null;
       if (!m) throw new Error("Envoi par e-mail indisponible ici.");
@@ -365,6 +366,28 @@
     } catch (er) { fail("Connexion impossible pour le moment. Vérifiez votre réseau et réessayez."); }
   });
 
+  /* Nom de l'agence : les outils sont écrits pour « M la créative » ; le nom saisi par l'administrateur le remplace partout à l'écran. */
+  var BASE_ORG = "M la créative", brandObs = null;
+  function brandNode(root) {
+    var o = CFG.org; if (!o || o === BASE_ORG || !root) return;
+    var up = o.toUpperCase(), B = BASE_ORG.toUpperCase();
+    var fix = function (t) { return t.indexOf(BASE_ORG) < 0 && t.indexOf(B) < 0 ? t : t.split(BASE_ORG).join(o).split(B).join(up); };
+    if (root.nodeType === 3) { var v = fix(root.nodeValue); if (v !== root.nodeValue) root.nodeValue = v; return; }
+    if (root.nodeType !== 1 || root.closest && root.closest("script,style,textarea,input,#jp-auth,#jp-acc")) return;
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: function (n) { var p = n.parentElement; return p && !p.closest("script,style,textarea") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT; } }), n, list = [];
+    while ((n = w.nextNode())) if (n.nodeValue.indexOf(BASE_ORG) >= 0 || n.nodeValue.indexOf(B) >= 0) list.push(n);
+    list.forEach(function (t) { t.nodeValue = fix(t.nodeValue); });
+    ["placeholder", "title", "aria-label"].forEach(function (a) { if (root.querySelectorAll) root.querySelectorAll("[" + a + "*='" + BASE_ORG + "']").forEach(function (e) { e.setAttribute(a, fix(e.getAttribute(a))); }); });
+  }
+  function brandAll() {
+    if (!CFG.org || CFG.org === BASE_ORG) return;
+    if (document.title.indexOf(BASE_ORG) >= 0) document.title = document.title.split(BASE_ORG).join(CFG.org);
+    brandNode(document.body);
+    if (brandObs) return;
+    brandObs = new MutationObserver(function (ms) { ms.forEach(function (m) { if (m.type === "characterData") brandNode(m.target); else m.addedNodes.forEach(brandNode); }); });
+    brandObs.observe(document.body, { childList: true, subtree: true, characterData: true });
+  }
+
   function enter(u) {
     current = u;
     if (current.kind !== "team" && allowed().indexOf(MOD) < 0) {
@@ -376,6 +399,7 @@
     isReady = true;
     readyFns.splice(0).forEach(function (fn) { try { fn(pub(current)); } catch (e) {} });
     if (SUITE) navUser(); else pill();
+    brandAll();
     try { window.dispatchEvent(new CustomEvent("jp-auth", { detail: pub(current) })); } catch (e) {}
   }
   function navUser() {
