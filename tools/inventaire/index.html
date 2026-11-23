@@ -851,8 +851,7 @@ function renderSettings(){
   if(adm)h+=`<section class="adm-sec" id="allopts"><h2>Options des modes Inventaire et Location</h2><p class="note">Activé : les deux modes affichent toutes les options (catégories, filtres, tri, compteurs, bouton Ajouter pour les gestionnaires). Les droits de chacun restent les mêmes. S'applique à toute l'équipe.</p>${useg("allopts",[[false,"Options propres à chaque mode"],[true,"Toutes les options dans les deux modes"]],allOpts)}</section>`;
   if(isMgr()&&db&&boOn("places"))h+=placesSection();
   if(adm)h+=typesSection();
-  if(adm)h+=`<section class="adm-sec"><h2>Interface par défaut de l'équipe</h2><p class="note">S'applique à tous ceux qui n'ont pas choisi leurs propres réglages ici. Actuellement : ${(MODES_UI.find(x=>x[0]===uiTeam().theme)||MODES_UI[0])[1]}, densité ${uiTeam().density==="compact"?"compacte":"confortable"}.</p>
-    <div class="row-b"><button class="btn pri sm" data-uact="share"><span class="ms">groups</span>Appliquer mes réglages à toute l'équipe</button>${Object.keys(uiShared).length?`<button class="btn ghost sm" data-uact="unshare"><span class="ms">restart_alt</span>Revenir à la Charte A</button>`:""}</div></section>`;
+  /* « Interface par défaut de l'équipe » retirée : la charte Refraction s'applique à tous */
   h+=`</div>`;
   $("#setPage").innerHTML=h;
 }
