@@ -570,7 +570,7 @@ html body .mgrid .dcard.islate{border-color:var(--casse)!important;box-shadow:in
   <button data-g="sav" data-bo="tickets" class="rail-btn tab" data-act="tickets" data-nav="tickets"><span class="ms">support_agent</span><span class="l">Tickets</span></button>
   <div class="rail-spacer"></div>
   <button class="rail-btn tab tab-plus" data-act="more" id="tabPlus"><span class="ms">more_horiz</span><span class="l">Plus</span></button>
-  <button class="rail-btn" data-act="acces" data-nav="acces" data-admin hidden><span class="ms">how_to_reg</span><span class="l" id="accLbl">Accès</span></button>
+  <button class="rail-btn" data-act="acces" data-nav="acces" data-admin hidden style="display:none!important" tabindex="-1"><!-- Accès : onglet du Back office --><span class="ms">how_to_reg</span><span class="l" id="accLbl">Accès</span></button>
   <button class="rail-btn" data-act="bo" data-nav="bo" data-admin hidden><span class="ms">admin_panel_settings</span><span class="l">Back office</span></button>
   <button class="rail-btn" data-act="team" data-admin hidden><span class="ms">group</span><span class="l">Équipe</span></button>
   <button class="rail-btn" data-act="settings" data-nav="set"><span class="ms">tune</span><span class="l">Réglages</span></button>
@@ -936,12 +936,18 @@ document.addEventListener("click",async e=>{
 });
 function renderBO(){
   const ro=myRole!=="admin"||!db;
+  /* « Accès & rôles » vit dans un onglet du Back office : on remet son bloc à sa place avant de redessiner */
+  const accEl=$("#acc"),accHome=document.querySelector("#accsec .page");if(accEl&&accHome&&accEl.parentElement!==accHome)accHome.appendChild(accEl);
+  const nPend=(typeof accessReqs!=="undefined"?accessReqs:[]).filter(a=>a.status==="pending").length;
   let h=`<div class="seg adm-tabs" role="tablist">
     <button role="tab" aria-pressed="${boTab==="feat"}" data-boact="tab" data-k="feat"><span class="ms">toggle_on</span>Fonctionnalités</button>
     <button role="tab" aria-pressed="${boTab==="serv"}" data-boact="tab" data-k="serv"><span class="ms">apps</span>Services disponibles</button>
-    <button role="tab" aria-pressed="${boTab==="save"}" data-boact="tab" data-k="save"><span class="ms">backup</span>Sauvegarde</button></div><div class="adm-box">`;
+    <button role="tab" aria-pressed="${boTab==="save"}" data-boact="tab" data-k="save"><span class="ms">backup</span>Sauvegarde</button>
+    <button role="tab" aria-pressed="${boTab==="acces"}" data-boact="tab" data-k="acces"><span class="ms">how_to_reg</span>Accès &amp; rôles${nPend?` (${nPend})`:""}</button></div><div class="adm-box">`;
   if(ro)h+=`<p class="note">Lecture seule : seul l'administrateur de l'appli peut modifier ces réglages.</p>`;
-  if(boTab==="feat"){
+  if(boTab==="acces"){
+    h+=`<section class="adm-sec"><h2>Accès &amp; rôles</h2><p class="note">Validez les demandes, invitez par e-mail et gérez les rôles.</p><div id="accHost"></div></section>`;
+  }else if(boTab==="feat"){
     const off=BO_FEAT.filter(f=>!boOn(f[0])).length;
     h+=`<section class="adm-sec"><h2>Fonctionnalités de l'inventaire</h2>
       <p class="note">Désactivée, la fonction disparaît de l'interface de toute l'équipe ; les données déjà enregistrées sont conservées.${off?" Actuellement "+off+" désactivée"+(off>1?"s":"")+".":""}</p>
@@ -973,6 +979,7 @@ function renderBO(){
       <p class="note">Un onglet décoché disparaît de la barre de navigation et du menu « Plus » pour ce rôle.</p></section>`;
   }
   $("#boPage").innerHTML=h+`</div>`;
+  if(boTab==="acces"){const host=$("#accHost"),a=$("#acc");if(host&&a){host.appendChild(a);renderAcces()}}
 }
 const RS_SKIP={roles:1,access:1,invites:1};
 function rsBlock(ro){
@@ -1935,7 +1942,7 @@ checkHash();
     rolesReady=true;computeRole();render();if(cur&&cur.mode==="detail")renderDetail();if(dlgState?.kind==="team")renderDlg();
   },()=>{});
   db.collection("invites").onSnapshot(snap=>{invites=snap.docs.map(d=>({id:d.id,...d.data()}));invLoaded=true;computeRole();render();autoLinkInvites()},()=>{invLoaded=true;render()});
-  if(isEditor){db.collection("access").onSnapshot(snap=>{accessReqs=snap.docs.map(d=>({id:d.id,...d.data()}));accLoaded=true;render();autoLinkInvites();resolveNames(accessReqs.map(a=>a.id)).then(()=>{if(mode==="acces")renderAcces()})},()=>{accLoaded=true})}
+  if(isEditor){db.collection("access").onSnapshot(snap=>{accessReqs=snap.docs.map(d=>({id:d.id,...d.data()}));accLoaded=true;render();autoLinkInvites();resolveNames(accessReqs.map(a=>a.id)).then(()=>{if(mode==="acces"||(mode==="bo"&&boTab==="acces"))renderAcces()})},()=>{accLoaded=true})}
   else if(myId){const rd=async()=>{try{const d=await db.doc("access/"+myId).get();const x=d&&typeof d.data==="function"?d.data():null;myAccess=x?{id:myId,...x}:null}catch(e){}accLoaded=true;if(gateActive())render()};rd();setInterval(()=>{if(gateActive())rd()},20000)}
   else accLoaded=true;
   db.collection("people").onSnapshot(snap=>{persons=snap.docs.map(d=>({id:d.id,...d.data()}));if(mode==="dash")renderDash();if(mode==="mine")renderMine();mineBadge()},()=>{});
@@ -2732,7 +2739,7 @@ document.addEventListener("click",async e=>{
     case "asgtoggle":syncAsg();{const id=t.dataset.id;A.sel.has(id)?A.sel.delete(id):A.sel.add(id)}renderAssign();break;
     case "asgnew":syncAsg();openForm(null,{d:A.kind==="inv"?{assignedTo:A.person,category:defCat("informatique")}:{category:defCat("tournage")},back:{person:A.person,kind:A.kind}});break;
     case "asgsave":saveAssign();break;
-    case "acces":mode="acces";scrollTop0();render();break;
+    case "acces":mode="bo";boTab="acces";scrollTop0();render();break;
     case "gatereq":submitAccess();break;
     case "accok":decideAccess(t.dataset.id,"ok");break;
     case "accno":decideAccess(t.dataset.id,"no");break;
