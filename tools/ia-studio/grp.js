@@ -33,11 +33,16 @@ function css() {
     '.grp-sub button:hover{color:var(--ink,#000)}' +
     '.grp-sub button[aria-current="page"]{color:var(--ink,#000);box-shadow:inset 0 -3px 0 var(--red,#E3120B)}' +
     '.grp-sub .ms{font-size:18px}' +
+    '.grp-sub .grp-name{display:inline-flex;align-items:center;gap:6px;flex:0 1 auto;min-width:0;max-width:34ch;padding:9px 14px 9px 4px;margin-right:6px;border-right:2px solid var(--bd,currentColor);font-size:13px;font-weight:900;color:var(--ink,#000);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}' +
+    '.grp-sub .grp-name small{font-weight:700;color:var(--mid,#777)}' +
     '@media (max-width:760px){.grp-sub{margin-bottom:14px}.grp-sub button{padding:8px 11px;font-size:12.5px}' +
       '.grp-sub button .l{display:none}.grp-sub button[aria-current="page"] .l{display:inline}}';
   document.head.appendChild(s);
 }
 
+function projName() {
+  try { return window.IA_PROJ ? window.IA_PROJ() : { t: '', c: '' }; } catch (e) { return { t: '', c: '' }; }
+}
 function railBtn(v) { return document.querySelector('.rail-btn[data-view="' + v + '"]'); }
 function currentView() {
   var open = document.querySelector('main > section.view:not([hidden])');
@@ -88,7 +93,8 @@ function makeSub() {
 function paint() {
   makeBtn(); makeSub();
   var v = currentView(), ok = allowed(), has = hasProject();
-  var sig = v + '|' + ok.join(',') + '|' + has;
+  var pn = projName();
+  var sig = v + '|' + ok.join(',') + '|' + has + '|' + pn.t + '|' + pn.c;
   if (sig === lastPaint) return;
   lastPaint = sig;
 
@@ -97,7 +103,8 @@ function paint() {
     sub.hidden = !inCrea;
     if (inCrea) {
       try { localStorage.setItem(LAST, v); } catch (e) {}
-      sub.innerHTML = CREA.filter(function (c) { return ok.indexOf(c[0]) >= 0; }).map(function (c) {
+      var esc = function (x) { return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); };
+      sub.innerHTML = (pn.t ? '<span class="grp-name" title="' + esc(pn.c ? pn.c + ' · ' + pn.t : pn.t) + '"><span class="ms" aria-hidden="true">movie</span>' + (pn.c ? '<small>' + esc(pn.c) + ' ·</small>' : '') + esc(pn.t) + '</span>' : '') + CREA.filter(function (c) { return ok.indexOf(c[0]) >= 0; }).map(function (c) {
         return '<button type="button" data-v="' + c[0] + '"' + (c[0] === v ? ' aria-current="page"' : '') + '>' +
           '<span class="ms" aria-hidden="true">' + c[2] + '</span><span class="l">' + c[1] + '</span></button>';
       }).join('');

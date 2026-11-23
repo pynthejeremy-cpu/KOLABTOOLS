@@ -277,6 +277,7 @@ input[type=color].sw::-moz-color-swatch{border:0;opacity:0}
 
 /* ---------- moodboard ---------- */
 .mb-grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:32px;align-items:start}
+.mb-grid:has(>.mb-side[hidden]){grid-template-columns:minmax(0,1fr)}.mb-side[hidden]{display:none!important}
 .drop{border:2px dashed var(--bd2);background:repeating-linear-gradient(-45deg,var(--hatch) 0 12px,transparent 12px 26px);padding:26px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;margin-bottom:22px}
 .drop.drag{background:var(--ink);color:var(--paper)}
 .mason{columns:3 220px;column-gap:16px}
@@ -903,6 +904,17 @@ body:has(#core-nav) .gantt-wrap{margin-right:30px}
 .g-h.dl{box-shadow:inset 0 -4px 0 var(--red)}
 .g-corner{position:sticky;left:0;z-index:3;align-items:flex-start;padding-left:12px}
 .g-who{position:sticky;left:0;z-index:2;display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--bd);border-right:2px solid var(--bd);grid-column:1}
+
+.pl-link{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:10px 14px;margin-bottom:12px;border:1px solid var(--bd);border-radius:12px;background:var(--card)}
+.pl-link.on{border-color:var(--red)}
+.pl-link .note{flex-basis:100%;margin:0}
+button.g-who.asg{all:unset;box-sizing:border-box;position:sticky;left:0;z-index:2;display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--card);border-bottom:1px solid var(--bd);border-right:2px solid var(--bd);grid-column:1;cursor:pointer}
+button.g-who.asg:hover,button.g-who.asg:focus-visible{background:var(--band);color:var(--band-t)}
+button.g-who.asg .ms{margin-left:auto;font-size:18px;opacity:.8}
+.asg-list{display:grid;gap:4px;max-height:50vh;overflow:auto}
+.asg-item{all:unset;box-sizing:border-box;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;padding:8px 10px;border-radius:10px;cursor:pointer}
+.asg-item>:first-child{grid-row:1 / 3}.asg-item em{font-size:12px;opacity:.7;font-style:normal}
+.asg-item:hover,.asg-item:focus-visible{background:rgba(128,128,128,.16)}
 .g-who-t{display:flex;flex-direction:column;min-width:0}
 .g-who-t b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .g-who-t em{font-style:normal;font-size:11px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1285,7 +1297,6 @@ details.ap-more .mode-grid{margin-top:10px}
     <section class="view" id="view-scenario" hidden aria-labelledby="scH">
       <header class="hero">
         <div class="hero-ink">
-          <span class="kicker">Étape 1</span>
           <h1 class="h1" id="scH">Collez votre scénario</h1>
           <p class="sub">Le studio le découpe en plans, propose un mouvement de caméra et une lumière pour chacun, crée les personnages et monte les scènes 3D.</p>
         </div>
@@ -1495,7 +1506,6 @@ details.ap-more .mode-grid{margin-top:10px}
     <section class="view" id="view-mood" hidden aria-labelledby="mbH">
       <header class="hero">
         <div class="hero-ink">
-          <span class="kicker">Direction artistique</span>
           <h1 class="h1" id="mbH">Moodboard</h1>
           <p class="sub">Les visuels de référence du film. Claude les analyse pour nourrir les prompts Higgsfield.</p>
         </div>
@@ -1512,7 +1522,7 @@ details.ap-more .mode-grid{margin-top:10px}
             <div class="drop" id="mbDrop"><span class="ms" aria-hidden="true" style="font-size:30px">photo_library</span><strong>Déposez vos images ici</strong><span class="note">ou collez-les (Ctrl/Cmd + V) · plusieurs à la fois</span></div>
             <div class="mason" id="mbList"></div>
           </div>
-          <aside class="mb-side">
+          <aside class="mb-side" hidden>
             <div class="sec-h"><h2>Analyse utilisée dans les prompts</h2></div>
             <textarea class="ta" id="mbAnalysis" placeholder="Palette, textures, optique, lumière, ambiance… Rédigez-la ou lancez l’analyse."></textarea>
             <p class="note" id="mbNote"></p>
@@ -5394,7 +5404,7 @@ function renderGen() {
   // 2. model
   const cards = el("div", { class: "model-grid" }, (GEN_MODELS.filter(m => expOn("ai", m.id)).length ? GEN_MODELS.filter(m => expOn("ai", m.id)) : GEN_MODELS).map(m => {
     const r = resOf(m, g.res);
-    return el("button", { class: "model", "aria-pressed": String(g.model === m.id), disabled: ro, onclick: () => { saveGen({ model: m.id, res: resOf(m, g.res) }); renderGen(); } },
+    return el("button", { class: "model", "aria-pressed": String(g.model === m.id), disabled: ro, onclick: () => { saveGen({ model: m.id, res: resOf(m, g.res) }); let n = 0; for (const it of deliveryList().items) { const sh = getShot(it.id); if (sh.gen && sh.gen.model && sh.gen.model !== m.id) { delete sh.gen.model; scheduleSave(it.id); n++; } } renderGen(); snack(`Calculette mise à jour : ${m.name}${n ? ` sur tous les plans (${n} plan${n > 1 ? "s" : ""} suivai${n > 1 ? "ent" : "t"} un autre modèle)` : ""}`); } },
       m.cheapest ? el("b", { class: "m-badge", text: "Le moins cher" }) : null, el("strong", { text: m.name }), el("span", { text: m.note }),
       el("em", { text: m.local ? "0 crédit" : `${credFmt(rateOf(m, r) * 5)} crédit${rateOf(m, r) * 5 > 1 ? "s" : ""} / 5 s en ${r}` }));
   }));
@@ -7482,8 +7492,7 @@ function renderPlaces() {
   const box = $("#decorPrev"); if (!box) return; box.innerHTML = ""; const ro = !S.canWrite;
   const brief = el("textarea", { class: "ta", id: "plBrief", rows: "3", readonly: ro, placeholder: "Introduisez le film en quelques lignes : histoire, ton, lieux, personnages… (ou laissez le scénario parler)" }); brief.value = S.brief || "";
   brief.addEventListener("input", () => { S.brief = brief.value; saveBoard(); });
-  box.append(el("div", { class: "sec-h" }, el("h2", { text: `Lieux du projet · ${S.places.length}` })),
-    el("p", { class: "note", text: "Les lieux et les personnages se créent à partir de vos visuels, d’une introduction du film ou des en-têtes du scénario (INT. / EXT. – LIEU – JOUR / NUIT). Chaque plan est relié à son lieu." }),
+  box.append(
     el("div", { class: "field" }, el("label", { for: "plBrief", text: "Introduction du film (prompt)" }), brief),
     ro ? null : el("div", { class: "row2" },
       el("button", { class: "btn sm", id: "plAI", hidden: !S.sample, onclick: createFromAI }, icon("auto_awesome"), el("span", { text: S.mood.items.length ? "Créer lieux et personnages (visuels + introduction)" : "Créer lieux et personnages (introduction)" })),
@@ -7750,17 +7759,94 @@ function teamMembers() {
   if (S.db) { for (const id in (S.profilesDoc || {})) { const p = S.profilesDoc[id]; ppl.push({ id, name: p.alias || S.names[id] || "Sans nom", role: p.role || "" }); }
     if (S.uid && !ppl.some(p => p.id === S.uid)) { const me = myProfile() || {}; ppl.push({ id: S.uid, name: me.alias || S.meName || "Vous", role: me.role || "" }); } }
   else for (const p of localProfiles()) ppl.push({ id: p.id, name: p.alias, role: p.role || "" });
+  /* personnes attribuées au projet (rôle → personne de la base du Planning agence ou de l'équipe) */
+  const P_ = S.plan || {}; const resName = (id) => { const r = (KP.res || []).find(x => x.id === id); return r ? r.name : ""; };
+  const has = (id, role) => ppl.some(p => p.id === id && (p.role === role || !p.cast && !TEAM_ROLES.includes(role)));
+  for (const c of (P_.cast || [])) if (c && c.id && !has(c.id, c.role)) ppl.push({ id: c.id, name: c.name || resName(c.id) || "Sans nom", role: c.role || "", cast: true });
+  for (const t of (P_.tasks || [])) if (t.assignee && !has(t.assignee, t.role) && !ppl.some(p => p.id === t.assignee && !p.cast)) { const n = resName(t.assignee); if (n) ppl.push({ id: t.assignee, name: n, role: t.role || "", cast: true }); }
   const rank = (r) => { const i = TEAM_ROLES.indexOf(r); return i < 0 ? 99 : i; };
   return ppl.sort((a, b) => rank(a.role) - rank(b.role) || a.name.localeCompare(b.name, "fr"));
 }
+/* ----- base de personnes et lien avec le Planning agence (suite KOLABTOOLS) ----- */
+const KP = { res: [], projects: [], pj: {}, on: false, unsub: null, sub: null };
+function kpStart() {
+  if (KP.on || !(window.CORE_API && window.CORE_API.suite) || !window.CORE || !window.CORE.raw) return; KP.on = true;
+  window.CORE.raw("db").then(db => { if (!db) return; KP.db = db;
+    db.doc("m/plan/st/main").onSnapshot(d => { const o = (d.exists && d.data()) || {};
+      KP.res = (o.res || []).filter(r => r && r.group === "rh").map(r => ({ id: r.id, name: r.name || "", fn: r.fn || "", sub: r.sub || "", email: r.email || "" }));
+      KP.projects = []; (o.clients || []).forEach(c => (c.projects || []).forEach(p => KP.projects.push({ pid: p.id, name: p.name || "", client: c.name || "" })));
+      kpAutoLink(); if (S.view === "planning" && !document.querySelector("dialog[open]")) renderPlanning(); }, () => {});
+  }).catch(() => {});
+}
+const kpNorm = (x) => (window.CORE && window.CORE.norm ? window.CORE.norm(x) : String(x || "").toLowerCase().trim());
+function kpLinked() { const P = S.plan || {}; return P.link && KP.projects.find(p => p.pid === P.link.pid) || null; }
+function kpAutoLink() {
+  if (!S.pid || !KP.projects.length) return; const P = planData(); if (P.link) { kpWatch(); return; }
+  const names = [S.project, S.boardTitle].map(kpNorm).filter(Boolean);
+  const hit = KP.projects.filter(p => names.includes(kpNorm(p.name)));
+  if (hit.length === 1) { P.link = { pid: hit[0].pid, name: hit[0].name, client: hit[0].client }; savePlan(); kpWatch(); }
+}
+const kpHash = (p) => JSON.stringify({ tasks: (p && p.tasks) || [], versions: (p && p.versions) || [], deadline: (p && p.deadline) || "" }, (k, v) => k === "_lane" ? undefined : v);
+function kpWatch() {
+  const L = kpLinked(); const want = L ? L.pid : null;
+  if (KP.sub === want) return; if (KP.unsub) { try { KP.unsub(); } catch (e) {} KP.unsub = null; } KP.sub = want; if (!want || !KP.db) return;
+  const pid0 = S.pid;
+  KP.unsub = KP.db.doc("m/plan/pj/" + want).onSnapshot(d => {
+    if (d.metadata && d.metadata.hasPendingWrites) return; if (S.pid !== pid0) return;
+    const remote = ((d.exists && d.data()) || {}).plan || null; const P = planData(); const sync = P.linkH || "";
+    const hr = remote ? kpHash(remote) : "", hl = kpHash(P);
+    if (hr === hl) { if (sync !== hl) { P.linkH = hl; saveBoard(); } return; }
+    if (remote && hr !== sync) { /* le Planning agence a changé : on reprend sa version */
+      P.tasks = clone(remote.tasks || []); P.versions = clone(remote.versions || []); P.deadline = remote.deadline || ""; P.linkH = hr; saveBoard();
+      if (S.view === "planning" && !document.querySelector("dialog[open]")) { if (P.tasks.length) S.planStart = mondayOf(P.tasks.map(t => t.start).sort()[0]); renderPlanning(); }
+    } else kpPush();
+  }, () => {});
+}
+function kpPush() {
+  const L = kpLinked(); if (!L || !KP.db) return; const P = planData(); const plan = JSON.parse(JSON.stringify({ tasks: P.tasks, versions: P.versions, deadline: P.deadline || "" }, (k, v) => k === "_lane" ? undefined : v));
+  P.linkH = kpHash(plan); const ref = KP.db.doc("m/plan/pj/" + L.pid);
+  ref.get().then(d => { const o = (d.exists && d.data()) || {}; o.plan = plan; return ref.set(o); }).catch(() => snack("Le Planning agence n’a pas pu être mis à jour."));
+}
+function kpBar(ro) {
+  if (!(window.CORE_API && window.CORE_API.suite)) return null; kpStart();
+  const P = planData(); const L = kpLinked();
+  const sel = el("select", { class: "sel", disabled: ro, "aria-label": "Projet du Planning agence", style: "max-width:340px" }, el("option", { value: "", text: KP.projects.length ? "Non relié" : "Aucun projet dans le Planning agence" }),
+    KP.projects.map(p => el("option", { value: p.pid, text: `${p.client ? p.client + " · " : ""}${p.name}` })));
+  sel.value = L ? L.pid : "";
+  sel.addEventListener("change", () => { const P = planData(); const p = KP.projects.find(x => x.pid === sel.value); P.link = p ? { pid: p.pid, name: p.name, client: p.client } : null; P.linkH = ""; saveBoard(); KP.sub = undefined; kpWatch(); renderPlanning(); snack(p ? `Relié au Planning agence : ${p.name}` : "Lien avec le Planning agence retiré"); });
+  return el("div", { class: "pl-link" + (L ? " on" : "") }, icon(L ? "sync" : "link_off"),
+    el("span", { text: L ? "Synchronisé avec le Planning agence :" : "Planning agence :" }), sel,
+    el("span", { class: "note", text: L ? "Les tâches, versions et deadline sont partagées dans les deux sens." : "Reliez ce projet à son projet du Planning agence pour retrouver son rétroplanning ici." }));
+}
+function allPeople() {
+  const out = []; for (const m of teamMembers()) if (!out.some(o => o.id === m.id)) out.push(Object.assign({}, m));
+  for (const r of KP.res) if (!out.some(m => m.id === r.id)) out.push({ id: r.id, name: r.name, role: "", fn: r.fn, base: true });
+  return out;
+}
+function assignRole(role) {
+  const P = planData(); const ppl = allPeople();
+  let dlg = document.getElementById("asgDlg"); if (dlg) dlg.remove();
+  dlg = el("dialog", { class: "dlg", id: "asgDlg", "aria-labelledby": "asgT", style: "width:min(460px,calc(100% - 28px))" });
+  const pick = (p) => { const P = planData(); P.cast = (P.cast || []).filter(c => c.role !== role); if (p) { P.cast.push({ id: p.id, name: p.name, role }); P.tasks.forEach(t => { if (t.role === role && !t.assignee) t.assignee = p.id; }); } savePlan(); dlg.close(); renderPlanning(); snack(p ? `${p.name} · ${role}` : `${role} : à attribuer`); };
+  const q = el("input", { class: "in", type: "search", placeholder: "Rechercher une personne…", "aria-label": "Rechercher une personne" });
+  const list = el("div", { class: "asg-list", role: "listbox" });
+  const paint = () => { const v = kpNorm(q.value); list.replaceChildren(...ppl.filter(p => !v || kpNorm(p.name + " " + (p.fn || "") + " " + (p.role || "")).includes(v)).map(p => el("button", { type: "button", class: "asg-item", role: "option", onclick: () => pick(p) }, el("span", { class: "peer sm", text: initials(p.name) }), el("b", { text: p.name }), el("em", { text: p.fn || p.role || (p.base ? "Planning agence" : "Équipe") }))));
+    const nv = q.value.trim(); if (nv && !ppl.some(p => kpNorm(p.name) === kpNorm(nv))) list.append(el("button", { type: "button", class: "asg-item", onclick: () => pick({ id: uid("pp"), name: nv }) }, icon("person_add"), el("b", { text: `Ajouter « ${nv} »` }), el("em", { text: "nouvelle personne pour ce projet" })));
+    if (!list.children.length) list.append(el("p", { class: "note", text: "Aucune personne. Ajoutez l’équipe dans le Planning agence (Ressources › RH) ou tapez un nom." })); };
+  q.addEventListener("input", paint); paint();
+  dlg.append(el("div", { class: "dlg-head" }, el("div", { class: "band" }, el("h2", { id: "asgT", text: `Attribuer · ${role}` })), el("button", { class: "ib", "aria-label": "Fermer", onclick: () => dlg.close() }, icon("close"))),
+    el("div", { style: "padding:14px 18px;display:grid;gap:10px" }, q, list),
+    el("div", { class: "dlg-foot" }, (P.cast || []).some(c => c.role === role) ? el("button", { class: "btn ghost", onclick: () => pick(null) }, "Retirer l’attribution") : null, el("span", { class: "grow" }), el("button", { class: "btn ghost", onclick: () => dlg.close() }, "Fermer")));
+  document.body.append(dlg); openDlg(dlg); q.focus();
+}
 function rowsForGantt() {
   const mem = teamMembers(); const rows = [];
-  for (const r of TEAM_ROLES) { const ps = mem.filter(m => m.role === r); if (ps.length) ps.forEach(p => rows.push({ key: p.id, label: p.name, role: r, person: p })); else rows.push({ key: "role:" + r, label: "À attribuer", role: r, person: null }); }
+  for (const r of TEAM_ROLES) { const ps = mem.filter(m => m.role === r); if (ps.length) ps.forEach(p => rows.push({ key: p.cast ? p.id + "|" + r : p.id, label: p.name, role: r, person: p })); else rows.push({ key: "role:" + r, label: "À attribuer", role: r, person: null }); }
   mem.filter(m => !TEAM_ROLES.includes(m.role)).forEach(p => rows.push({ key: p.id, label: p.name, role: p.role || "Autre", person: p }));
   return rows;
 }
-const taskRow = (t, rows) => rows.find(r => r.key === t.assignee) || rows.find(r => !r.person && r.role === t.role) || rows.find(r => r.role === t.role) || null;
-function savePlan() { saveBoard(); }
+const taskRow = (t, rows) => rows.find(r => r.person && r.person.cast && r.person.id === t.assignee && r.role === t.role) || rows.find(r => r.key === t.assignee) || rows.find(r => !r.person && r.role === t.role) || rows.find(r => r.role === t.role) || null;
+function savePlan() { saveBoard(); try { kpPush(); } catch (e) {} }
 /* ----- standard plan generator ----- */
 const STD_DUR = { brief: 1, ecriture: 2, story: 3, lieux: 2, ppm: 1, gen: 3, upscale: 1, offline: 2, retours: 1, online: 1, etalo: 2, son: 2, sous: 1, masters: 1, livraison: 1 };
 function generateStandard() {
@@ -7806,7 +7892,7 @@ async function exportICS(only) {
 /* ----- task dialog ----- */
 let tkCur = null;
 function openTask(t, isNew) {
-  tkCur = t; const d = $("#tkDlg"); const body = $("#tkBody"); body.innerHTML = ""; const ro = !S.canWrite; const mem = teamMembers();
+  tkCur = t; const d = $("#tkDlg"); const body = $("#tkBody"); body.innerHTML = ""; const ro = !S.canWrite; const mem = allPeople();
   $("#tkTitle").textContent = isNew ? "Nouvelle tâche" : t.title;
   const f = (lab, node) => el("div", { class: "field" }, el("span", { class: "lbl", text: lab }), node);
   const ti = el("input", { class: "in", value: t.title, readonly: ro, "aria-label": "Titre" }); ti.addEventListener("input", () => t.title = ti.value);
@@ -7835,6 +7921,7 @@ function renderPlanning() {
   // toolbar
   const dl = el("input", { class: "in", type: "date", value: P.deadline || "", readonly: ro, id: "plDeadline", style: "max-width:170px" }); dl.addEventListener("change", () => { P.deadline = dl.value; savePlan(); renderPlanning(); });
   const left = P.deadline ? diffDays(today(), P.deadline) : null;
+  kpAutoLink(); { const kb = kpBar(ro); if (kb) page.append(kb); }
   page.append(el("div", { class: "pl-bar" },
     el("div", { class: "row2" }, el("button", { class: "ib", "aria-label": "Période précédente", onclick: () => { S.planStart = addDays(S.planStart, -S.planSpan); renderPlanning(); } }, icon("chevron_left")),
       el("button", { class: "btn ghost sm", onclick: () => { S.planStart = mondayOf(today()); renderPlanning(); } }, "Aujourd’hui"),
@@ -7856,7 +7943,8 @@ function renderPlanning() {
   days.forEach((dd, i) => { const vs = P.versions.filter(v => v.date === dd); const cell = el("div", { class: "g-cell g-vcell" + (isWeekend(dd) ? " we" : ""), style: `grid-column:${i + 2}` }); vs.forEach(v => cell.append(el("button", { class: "g-ver-pin " + (v.status || ""), title: `${v.name} · ${v.status === "ok" ? "validée" : v.status === "review" ? "à valider" : "en cours"}${v.note ? " · " + v.note : ""}`, onclick: () => editVersion(v) }, v.name))); g.append(cell); });
   rows.forEach((r, ri) => {
     const line = ri + 3;
-    g.append(el("div", { class: "g-who", style: `grid-row:${line}` }, el("span", { class: "peer sm", text: r.person ? initials(r.person.name) : "?" }), el("span", { class: "g-who-t" }, el("b", { text: r.label }), el("em", { text: r.role }))));
+    const canAsg = !ro && (!r.person || r.person.cast) && TEAM_ROLES.includes(r.role);
+    g.append(el(canAsg ? "button" : "div", Object.assign({ class: "g-who" + (canAsg ? " asg" : ""), style: `grid-row:${line}` }, canAsg ? { type: "button", title: r.person ? "Changer la personne" : "Attribuer une personne", onclick: () => assignRole(r.role) } : {}), el("span", { class: "peer sm", text: r.person ? initials(r.person.name) : "?" }), el("span", { class: "g-who-t" }, el("b", { text: r.label }), el("em", { text: r.role })), canAsg && !r.person ? icon("person_add") : null));
     days.forEach((dd, i) => { const c = el("div", { class: "g-cell" + (isWeekend(dd) ? " we" : "") + (dd === today() ? " today" : ""), style: `grid-row:${line};grid-column:${i + 2}`, title: ro ? "" : "Ajouter une tâche ici" }); if (!ro) c.addEventListener("dblclick", () => { const sid = Object.keys(STAGE).find(k => STAGE[k].role === r.role) || "offline"; openTask({ id: uid("t"), title: STAGE[sid].label, stage: sid, role: r.role, assignee: r.person ? r.person.id : "", start: dd, end: dd, status: "todo", note: "" }, true); }); g.append(c); });
     const mine = P.tasks.filter(t => taskRow(t, rows) === r).filter(t => !(diffDays(last, t.start) > 0 || diffDays(t.end, days[0]) > 0)).sort((a, b) => a.start.localeCompare(b.start));
     const lanes = []; mine.forEach(t => { let li = lanes.findIndex(e => diffDays(e, t.start) > 0); if (li < 0) { li = lanes.length; lanes.push(t.end); } else lanes[li] = t.end; t._lane = li; });
@@ -8441,6 +8529,7 @@ $("#dlTool").addEventListener("click", async () => {
 /* ============================================================
    LIBRARY: projects, profiles, automatic versions
    ============================================================ */
+window.IA_PROJ = () => ({ t: S.pid ? String(S.project || S.boardTitle || "").trim() : "", c: S.pid ? String(S.client || "").trim() : "" });
 S.projects = []; S.pid = null; S.subs = []; S.baseCanWrite = true; S.libPerson = ""; S.uid = null; S.profilesDoc = {}; S.names = {}; S.libFilter = lsGet("mv-libfilter") || "all"; S.libSort = "recent"; S.libQuery = "";
 const ROLES = ["Chef de projet", "Directeur artistique / Réalisateur", "Monteur", "Ingénieur du son", "Étalonneur", "Client", "Autre"];
 const timeAgo = (iso) => {
