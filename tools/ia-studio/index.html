@@ -401,6 +401,7 @@ input[type=color].sw::-moz-color-swatch{border:0;opacity:0}
 .rail-proj{margin:2px 10px 8px;background:transparent;border:1.5px solid var(--paper);color:var(--paper);font-size:10.5px;font-weight:800;padding:4px 6px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:76px;font-variation-settings:"wdth" 75}
 .rail-me{align-self:center;width:30px;height:30px;border-radius:50%;background:var(--paper);color:var(--ink);display:grid;place-items:center;font-size:11px;font-weight:900}
 .rail-me:empty{display:none}
+.rail-me{display:none!important}
 .lib-tools{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;margin-bottom:24px}
 .lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:26px}
 .pcard{border:2px solid var(--bd);display:flex;flex-direction:column;background:var(--paper)}
@@ -890,7 +891,8 @@ header.hero.coll-head>.coll-btn{position:absolute;right:16px;top:16px;background
 .pl-bar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 20px;align-items:center;margin-bottom:16px}
 .pl-range{font-size:15px;font-weight:900;min-width:180px}
 .gantt-wrap{overflow-x:auto;border:1px solid var(--bd);background:var(--card)}
-.gantt{display:grid;position:relative;min-width:max-content;grid-auto-rows:minmax(56px,auto)}
+.gantt{display:grid;position:relative;grid-auto-rows:minmax(56px,auto)}
+.gantt>*{min-width:0}
 .g-h{position:sticky;top:0;z-index:2;background:var(--band);color:var(--band-t);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:46px;font-size:11.5px;border-right:1px solid rgba(128,128,128,.25)}
 .g-h b{font-weight:900;text-transform:uppercase;letter-spacing:.06em}
 .g-h span{font-size:15px;font-weight:900}
@@ -1205,7 +1207,7 @@ details.ap-more .mode-grid{margin-top:10px}
       <span class="rail-me" id="railMe" aria-hidden="true"></span>
       <button class="rail-btn" data-view="admin" data-free="1"><span class="ms" aria-hidden="true">admin_panel_settings</span><span class="l">Back office</span></button>
       <button class="rail-btn" id="projBtn"><span class="ms" aria-hidden="true">settings</span><span class="l">Réglages</span></button>
-      <button class="rail-btn" id="themeBtn" aria-label="Changer de thème"><span class="ms" aria-hidden="true" id="themeIcon">contrast</span><span class="l" id="themeLbl">Auto</span></button>
+      <button class="rail-btn" id="themeBtn" aria-label="Changer de thème" hidden style="display:none!important" tabindex="-1"><span class="ms" aria-hidden="true" id="themeIcon">contrast</span><span class="l" id="themeLbl">Auto</span></button>
       <div class="rail-mode" id="railMode"></div>
     </div>
   </nav>
@@ -1243,7 +1245,7 @@ details.ap-more .mode-grid{margin-top:10px}
         <div class="hero-ink">
           <span class="kicker">Administration</span>
           <h1 class="h1" id="admH">Back office</h1>
-          <p class="sub">Réservé à l’administrateur : services et fonctionnalités activables un par un, interface visuelle appliquée à tout le monde, liberté des utilisateurs, accès par personne, sessions et projets.</p>
+          <p class="sub">Réservé à l’administrateur : services et fonctionnalités activables un par un, outils connectés, accès par personne, sessions et projets.</p>
         </div>
         <i class="stripe" aria-hidden="true"></i><i class="stripe thin" aria-hidden="true"></i>
       </header>
@@ -6963,7 +6965,8 @@ function applyFeatures() {
 /* ----- HUD (top right) ----- */
 const hud = el("div", { class: "hud-tr", id: "hudTr", "aria-live": "off" }); document.querySelector("main").append(hud);
 function renderHud() {
-  hud.hidden = !feat("hud"); if (hud.hidden) return; hud.innerHTML = "";
+  hud.hidden = true; return; /* pastilles du haut à droite retirées (crédits et compte : Réglages › Paramètres de mon compte) */
+  hud.innerHTML = "";
   const now = new Date(); hud.append(el("span", { class: "h-time", title: now.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) }, icon("schedule"), now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })));
   if (feat("accounts")) {
     const b = Number((S.acct.higgs || {}).balance); const has = Number.isFinite(b) && (S.acct.higgs || {}).linked;
@@ -6993,7 +6996,7 @@ function placeUM() {
 }
 /* the whole account flow lives in this panel under the top-right pill: create, edit, menu */
 function openUserPanel(mode) {
-  const anchor = document.querySelector("#hudTr .h-user"); if (!anchor) return; closeUM(); userAnchor = anchor;
+  const anchor = document.querySelector("#hudTr .h-user"); if (!anchor || anchor.offsetParent === null) { S.setTab = "account"; setView("settings"); return; } closeUM(); userAnchor = anchor;
   const me = (typeof myProfile === "function" && myProfile()) || null; const name = (me && me.alias) || S.meName || "";
   if (!mode) mode = name ? "menu" : "create";
   userMenu = el("div", { class: "user-menu", role: mode === "menu" ? "menu" : "dialog", "aria-label": mode === "create" ? "Créer mon compte" : mode === "edit" ? "Modifier mon profil" : "Mon compte" });
@@ -7004,7 +7007,7 @@ function openUserPanel(mode) {
       item("manage_accounts", "Mon compte et mes crédits", () => { closeUM(); S.setTab = "account"; setView("settings"); }),
       !S.db ? item("person_add", "Créer un autre compte sur ce poste", () => openUserPanel("create")) : null,
       !S.db && localProfiles().length > 1 ? el("div", { class: "um-sw" }, el("span", { class: "lbl", text: "Changer de compte" }), localProfiles().filter(p => p.id !== (me || {}).id).map(p => el("button", { role: "menuitem", onclick: () => { lsSet("mv-profile", p.id); S.uid = p.id; closeUM(); renderLibrary(); renderRail(); renderHud(); if (typeof applyAccess === "function") applyAccess(); snack(`Connecté : ${p.alias}`); } }, el("span", { class: "h-av", text: initials(p.alias) }), el("span", { text: `${p.alias}${p.role ? " · " + p.role : ""}` })))) : null,
-      item("palette", "Apparence", () => { closeUM(); S.setTab = "ui"; setView("settings"); }));
+      null);
   } else {
     const isNew = mode === "create"; const cur = isNew ? { alias: "", role: ROLES[0] } : (me || { alias: name, role: ROLES[0] });
     const nm = el("input", { class: "in", id: "umName", value: cur.alias || (isNew && S.db ? S.meName || "" : ""), placeholder: "Prénom et nom", autocomplete: "name" });
@@ -7603,7 +7606,8 @@ const projWrap = el("div", { class: "adm-box", id: "projWrap" });
 function fillProjWrap() { if (projWrap.childElementCount) return; [...$("#projDlg .dlg-body").children].forEach(n => { n.classList.add("adm-sec"); projWrap.append(n); }); }
 function renderSettings() {
   const page = $("#setPage"); if (!page) return; page.innerHTML = "";
-  const tabs = [["account", "Paramètres de mon compte", "manage_accounts"], ["ui", "Apparence", "palette"], ["project", "Projet", "folder_special"], ["features", "Fonctionnalités", "toggle_on"]];
+  if (S.setTab === "ui") S.setTab = "account"; /* onglet Apparence retiré : la charte Refraction s'applique à tous */
+  const tabs = [["account", "Paramètres de mon compte", "manage_accounts"], ["project", "Projet", "folder_special"], ["features", "Fonctionnalités", "toggle_on"]];
   page.append(el("div", { class: "seg adm-tabs", role: "tablist" }, tabs.map(([k, l, ic]) => el("button", { role: "tab", "aria-selected": String(S.setTab === k), "aria-pressed": String(S.setTab === k), onclick: () => { S.setTab = k; lsSet("mv-settab", k); renderSettings(); } }, icon(ic), l))));
   const box = el("div", { class: "adm-box" }); page.append(box);
   if (S.setTab === "account") admAccount(box);
@@ -7841,7 +7845,8 @@ function renderPlanning() {
       el("button", { class: "btn ghost sm", onclick: () => exportICS() }, icon("event"), "Google Agenda (.ics)"),
       S.uid ? el("button", { class: "btn ghost sm", onclick: () => exportICS(S.uid) }, icon("person"), "Mes tâches (.ics)") : null)));
   // gantt
-  const g = el("div", { class: "gantt", style: `grid-template-columns:200px repeat(${days.length}, minmax(${S.planSpan > 14 ? 30 : 64}px, 1fr))`, role: "grid", "aria-label": "Diagramme de Gantt" });
+  const colMin = S.planSpan > 14 ? 30 : 56;
+  const g = el("div", { class: "gantt", style: `grid-template-columns:200px repeat(${days.length}, minmax(${colMin}px, 1fr));min-width:${200 + days.length * colMin}px`, role: "grid", "aria-label": "Diagramme de Gantt" });
   g.append(el("div", { class: "g-h g-corner" }, el("span", { text: "Équipe" })));
   days.forEach(dd => { const D = dparse(dd); g.append(el("div", { class: "g-h" + (isWeekend(dd) ? " we" : "") + (dd === today() ? " today" : "") + (dd === P.deadline ? " dl" : "") }, el("b", { text: D.toLocaleDateString("fr-FR", { weekday: S.planSpan > 14 ? "narrow" : "short" }) }), el("span", { text: String(D.getDate()) }))); });
   // versions row
@@ -9140,15 +9145,35 @@ admInterface = function (box, ro) {
 /* ----- back-office : onglets ----- */
 renderAdmin = function () {
   const page = $("#adminPage"); if (!page) return; page.innerHTML = "";
-  const tabs = [["features", "Services et fonctionnalités", "toggle_on"], ["ui", "Interface visuelle", "palette"], ["services", "Accès par personne", "manage_accounts"], ["sessions", "Sessions", "groups"], ["projects", "Projets", "folder_copy"]];
+  const tabs = [["features", "Services et fonctionnalités", "toggle_on"], ["tools", "Outils connectés", "extension"], ["services", "Accès par personne", "manage_accounts"], ["sessions", "Sessions", "groups"], ["projects", "Projets", "folder_copy"]];
   if (S.adminTab === "exports") S.adminTab = "features";
+  if (S.adminTab === "ui") S.adminTab = "tools"; /* « Interface visuelle » retirée : la charte Refraction s'applique à tous */
   if (!tabs.some(t => t[0] === S.adminTab)) S.adminTab = "features";
   page.append(el("div", { class: "seg adm-tabs", role: "tablist" }, tabs.map(([k, l, ic]) => el("button", { role: "tab", "aria-selected": String(S.adminTab === k), "aria-pressed": String(S.adminTab === k), onclick: () => { S.adminTab = k; renderAdmin(); } }, icon(ic), l))));
   const ro = !S.isOwner && !!S.db;
   if (ro) page.append(el("p", { class: "desc", text: "Lecture seule : seul l’administrateur du studio peut modifier ces réglages." }));
   const box = el("div", { class: "adm-box" }); page.append(box);
-  const fn = ({ features: admSvcFeat, ui: admInterface, services: admServices, sessions: admSessions, projects: admProjects })[S.adminTab]; if (fn) fn(box, ro);
+  const fn = ({ features: admSvcFeat, tools: admTools, services: admServices, sessions: admSessions, projects: admProjects })[S.adminTab]; if (fn) fn(box, ro);
 };
+/* ----- outils connectés : video-shotcraft et HyperFrames (exports depuis la table de Montage) ----- */
+const CONNECTED_TOOLS = [
+  ["shotcraft", "video-shotcraft", "movie_filter", "https://github.com/Vincentwei1021/video-shotcraft",
+    "Films produit cinématographiques : cartes de plans, mouvements de caméra 2.5D, coupes calées sur le rythme, sound design (Remotion).",
+    "Dans le Montage, « Shotcraft » exporte le découpage du film (plans, durées, mouvements de caméra, intentions, son) et les images clés, prêts pour video-shotcraft."],
+  ["hyperframes", "HyperFrames", "html", "https://github.com/heygen-com/hyperframes",
+    "Le cadre vidéo HTML de HeyGen : une composition HTML devient une vidéo (texte animé, habillage, rendu MP4).",
+    "Dans le Montage, « HyperFrames » exporte la timeline en composition HTML (plans, durées, textes et logos), à rendre avec npx hyperframes render."]
+];
+const toolOn = (k) => !!((S.cfg.tools || {})[k]);
+function admTools(box, ro) {
+  box.append(el("section", { class: "adm-sec" }, el("h2", { text: "Outils connectés" }),
+    el("p", { class: "note", text: "Outils de fabrication vidéo reliés au studio. Une fois activé, l’outil apparaît dans la barre du Montage pour y envoyer le projet." }),
+    ...CONNECTED_TOOLS.map(([k, name, ic, url, what, how]) => el("div", { class: "adm-feat", style: "display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;padding:14px 0;border-top:1px solid var(--bd)" },
+      el("div", { style: "display:flex;gap:12px;align-items:flex-start;flex:1;min-width:240px" }, icon(ic), el("div", {},
+        el("b", { text: name }), el("p", { class: "note", style: "margin:4px 0", text: what }), el("p", { class: "note", style: "margin:4px 0", text: how }),
+        el("a", { href: url, target: "_blank", rel: "noopener", class: "note", text: url }))),
+      el("label", { class: "row2", style: "gap:8px;font-weight:800" }, el("input", { type: "checkbox", checked: toolOn(k), disabled: ro, onchange: async (e) => { S.cfg.tools = Object.assign({}, S.cfg.tools || {}, { [k]: e.target.checked }); await saveConfig(); if (window.mntTools) window.mntTools(); renderAdmin(); snack(`${name} ${e.target.checked ? "activé" : "désactivé"}`); } }), toolOn(k) ? "Activé" : "Activer")))));
+}
 applyUI();
 
 /* ============================================================
@@ -9312,6 +9337,8 @@ applyUI();
   <button class="mnt-b" id="mntSync" title="Suivre le plan sélectionné dans la Prévis 3D et le Storyboard"><span class="ms">link</span><span>Sync 3D</span></button>
   <button class="mnt-b" id="mntDetAll" title="Dissocier l’image et le son de tous les plans"><span class="ms">call_split</span><span>Tout dissocier</span></button>
   <button class="mnt-b" id="mntAddAudio" title="Ajouter une musique ou une voix off"><span class="ms">library_music</span><span>Son</span></button>
+  <button class="mnt-b" id="mntShotcraft" hidden title="Exporter le découpage pour video-shotcraft"><span class="ms">movie_filter</span><span>Shotcraft</span></button>
+  <button class="mnt-b" id="mntHyper" hidden title="Exporter la timeline en composition HyperFrames (HTML)"><span class="ms">html</span><span>HyperFrames</span></button>
   <button class="mnt-b p" id="mntRender" title="Rendre le montage complet en MP4"><span class="ms">movie</span><span>Rendu</span></button>
   <span class="sp"></span>
 </div>
@@ -9931,9 +9958,52 @@ applyUI();
   }
 
   /* ---------- entrée ---------- */
+  /* ---------- outils connectés : exports video-shotcraft et HyperFrames ---------- */
+  const hx = (t) => String(t == null ? "" : t).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function toolsBar() {
+    const on = k => !!((S.cfg && S.cfg.tools) || {})[k];
+    const a = q("#mntShotcraft"), b = q("#mntHyper");
+    if (a) { a.hidden = !on("shotcraft"); if (!a.dataset.w) { a.dataset.w = 1; a.addEventListener("click", exportShotcraft); } }
+    if (b) { b.hidden = !on("hyperframes"); if (!b.dataset.w) { b.dataset.w = 1; b.addEventListener("click", exportHyper); } }
+  }
+  window.mntTools = toolsBar;
+  async function zipOut(name, files, msg) {
+    if (!window.fflate) { snack("Le module ZIP n’a pas pu se charger."); return; }
+    const z = {}; for (const k in files) z[k] = typeof files[k] === "string" ? fflate.strToU8(files[k]) : files[k];
+    if (await saveFile(name, new Blob([fflate.zipSync(z)], { type: "application/zip" }))) snack(msg);
+  }
+  async function keyImages(list) {
+    const out = {};
+    for (const c of list) { try { const u = S.thumbs && S.thumbs[c.id]; const blob = typeof u === "string" ? await (await fetch(u)).blob() : (u instanceof Blob ? u : null); if (blob) out["images/" + c.file.replace(/\.mp4$/, ".png")] = new Uint8Array(await blob.arrayBuffer()); } catch (e) {} }
+    return out;
+  }
+  function plan() {
+    const { items, prefix } = deliveryList(); const byId = Object.fromEntries(items.map(it => [it.id, it]));
+    const L = clips().map(c => Object.assign({}, c, { file: (byId[c.id] || {}).file || (c.id + ".mp4"), base: (byId[c.id] || {}).base || c.id }));
+    return { L, prefix, fps: FPS(), fmt: GEN().format, res: DLV().res };
+  }
+  async function exportShotcraft() {
+    const { L, prefix, fps, fmt, res } = plan(); if (!L.length) { snack("Le montage est vide."); return; }
+    const shots = L.map((c, i) => { const sh = getShot(c.id) || {}; return { n: i + 1, file: c.file, title: c.title, start: +c.start.toFixed(3), duration: +c.dur.toFixed(3), in: c.in, camera_move: sh.move || null, camera_note: sh.cameraNote || "", prompt: sh.image || "", light: sh.light || "", sound: c.son, transition: c.trans || "cut", image: "images/" + c.file.replace(/\.mp4$/, ".png") }; });
+    const brief = { tool: "video-shotcraft", project: S.project || S.boardTitle || "", client: S.client || "", format: fmt, fps, resolution: res, total_seconds: +(L[L.length - 1].start + L[L.length - 1].dur).toFixed(3), shots };
+    const md = `# ${hx(brief.project)} — brief video-shotcraft\n\nFormat ${fmt} · ${fps} i/s · ${res}p · ${brief.total_seconds} s · ${shots.length} plans.\n\n` + shots.map(x => `## Plan ${x.n} — ${x.title || x.file}\n- Durée : ${x.duration} s (début ${x.start} s)\n- Caméra : ${x.camera_note || (x.camera_move ? x.camera_move.type : "fixe")}\n- Lumière : ${x.light || "—"}\n- Transition : ${x.transition}\n- Son : ${x.sound || "—"}\n- Intention : ${x.prompt || "—"}\n`).join("\n") + `\n---\nUtilisation : donnez ce dossier à Claude Code avec la compétence video-shotcraft (« use video-shotcraft to make a video » ), https://github.com/Vincentwei1021/video-shotcraft`;
+    await zipOut(`${prefix}_shotcraft.zip`, Object.assign({ "shotcraft.json": JSON.stringify(brief, null, 2), "BRIEF.md": md }, await keyImages(L)), "Découpage exporté pour video-shotcraft");
+  }
+  async function exportHyper() {
+    const { L, prefix, fps, fmt } = plan(); if (!L.length) { snack("Le montage est vide."); return; }
+    const [W, H] = typeof dims === "function" ? dims(DLV().res === 720 ? 720 : 1080) : [1920, 1080];
+    const tot = L[L.length - 1].start + L[L.length - 1].dur;
+    let v2 = []; try { v2 = (v2Items().items || []).filter(o => o.kind === "text"); } catch (e) {}
+    const clipsH = L.map((c, i) => `    <video class="clip" id="plan-${i + 1}" src="media/${hx(c.file)}" data-start="${c.start.toFixed(3)}" data-duration="${c.dur.toFixed(3)}" data-media-start="${(c.in || 0).toFixed(3)}" data-track-index="0" muted playsinline></video>`).join("\n");
+    const textsH = v2.map((o, i) => `    <div class="title" id="titre-${i + 1}" data-start="${o.a.toFixed(3)}" data-duration="${(o.b - o.a).toFixed(3)}" data-track-index="1">${hx(o.label)}</div>`).join("\n");
+    const html = `<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n<title>${hx(S.project || S.boardTitle || prefix)}</title>\n<style>\n  html,body{margin:0;background:#000}\n  #root{position:relative;width:${W}px;height:${H}px;overflow:hidden;background:#000}\n  .clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}\n  .title{position:absolute;left:8%;right:8%;bottom:10%;font:800 64px/1.1 Inter,system-ui,sans-serif;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.5)}\n</style>\n</head>\n<body>\n  <div id="root" data-composition-id="${hx(prefix)}" data-width="${W}" data-height="${H}" data-duration="${tot.toFixed(3)}" data-fps="${fps}">\n${clipsH}\n${textsH}\n  </div>\n</body>\n</html>\n`;
+    const readme = `# ${prefix} — composition HyperFrames\n\nTimeline du Montage IA Studio : ${L.length} plans, ${tot.toFixed(2)} s, ${W}×${H}, ${fps} i/s (${fmt}).\n\n1. Placez les MP4 des plans (bouton « Tout télécharger » de la page Livraison) dans le dossier media/ (noms identiques).\n2. Aperçu : npx hyperframes preview\n3. Rendu : npx hyperframes render index.html -o ${prefix}.mp4\n\nhttps://github.com/heygen-com/hyperframes\n`;
+    await zipOut(`${prefix}_hyperframes.zip`, { "index.html": html, "README.md": readme, "media/.keep": "" }, "Timeline exportée en composition HyperFrames");
+  }
+
   function renderEdit() {
     css();
-    const w = build(); if (!w) return;
+    const w = build(); if (!w) return; toolsBar();
     if (!M.sel || !(S.order || []).includes(M.sel)) { const l = clips(); M.sel = l.length ? l[0].id : null; M.selKind = "v"; }
     probe();
     paintTl(); panels(); chrome(); paintMon(true);
