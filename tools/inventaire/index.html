@@ -570,9 +570,9 @@ html body .mgrid .dcard.islate{border-color:var(--casse)!important;box-shadow:in
   <button data-g="sav" data-bo="tickets" class="rail-btn tab" data-act="tickets" data-nav="tickets"><span class="ms">support_agent</span><span class="l">Tickets</span></button>
   <div class="rail-spacer"></div>
   <button class="rail-btn tab tab-plus" data-act="more" id="tabPlus"><span class="ms">more_horiz</span><span class="l">Plus</span></button>
-  <button class="rail-btn" data-act="acces" data-nav="acces" data-admin hidden style="display:none!important" tabindex="-1"><!-- Accès : onglet du Back office --><span class="ms">how_to_reg</span><span class="l" id="accLbl">Accès</span></button>
+  <!-- Accès & rôles : onglet du Back office -->
   <button class="rail-btn" data-act="bo" data-nav="bo" data-admin hidden><span class="ms">admin_panel_settings</span><span class="l">Back office</span></button>
-  <button class="rail-btn" data-act="team" data-admin hidden><span class="ms">group</span><span class="l">Équipe</span></button>
+  <!-- Équipe & rôles : dans Back office › Accès & rôles -->
   <button class="rail-btn" data-act="settings" data-nav="set"><span class="ms">tune</span><span class="l">Réglages</span></button>
   <button class="rail-btn" data-act="cycletheme" id="themeBtn" aria-label="Changer de mode de couleur" hidden style="display:none!important" tabindex="-1"><!-- retiré : la charte Refraction s'applique à tous --><span class="ms" id="themeIcon">dark_mode</span><span class="l" id="themeLbl">Charte A</span></button>
 </nav>
@@ -946,7 +946,9 @@ function renderBO(){
     <button role="tab" aria-pressed="${boTab==="acces"}" data-boact="tab" data-k="acces"><span class="ms">how_to_reg</span>Accès &amp; rôles${nPend?` (${nPend})`:""}</button></div><div class="adm-box">`;
   if(ro)h+=`<p class="note">Lecture seule : seul l'administrateur de l'appli peut modifier ces réglages.</p>`;
   if(boTab==="acces"){
-    h+=`<section class="adm-sec"><h2>Accès &amp; rôles</h2><p class="note">Validez les demandes, invitez par e-mail et gérez les rôles.</p><div id="accHost"></div></section>`;
+    h+=`<section class="adm-sec"><h2>Accès &amp; rôles</h2><p class="note">Validez les demandes, invitez par e-mail et gérez les rôles.</p>
+      <div class="adm-feat" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:6px 0 14px"><div><b>Équipe &amp; rôles</b><p class="note" style="margin:2px 0 0">Attribuer un rôle à une personne, voir qui a quel rôle.</p></div><button class="btn sm" data-act="team"><span class="ms">group</span>Ouvrir Équipe &amp; rôles</button></div>
+      <div id="accHost"></div></section>`;
   }else if(boTab==="feat"){
     const off=BO_FEAT.filter(f=>!boOn(f[0])).length;
     h+=`<section class="adm-sec"><h2>Fonctionnalités de l'inventaire</h2>
