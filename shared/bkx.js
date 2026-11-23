@@ -198,6 +198,7 @@ function place(){
     if(fab)fab.style.display="none";
     return;
   }
+  if(window.BKX_NOFAB){if(fab)fab.style.display="none";return} /* la sauvegarde vit dans le back-office */
   if(!fab){
     fab=document.createElement("button");fab.className="bkx-fab";fab.type="button";
     fab.textContent="Sauvegarde";fab.setAttribute("data-bkx","open");

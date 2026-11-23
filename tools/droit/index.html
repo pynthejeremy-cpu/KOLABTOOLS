@@ -1,5 +1,20 @@
 <!doctype html><html><head>
-<script src="core.js" data-mod="droit"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<script src="core.js" data-mod="droit"></script><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+/* v2 : filtres, import papier, FAQ */
+.lfbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:12px 0}
+.lfbar .lf{min-width:150px;flex:1 1 150px;max-width:240px}
+.sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.impgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.improw{display:grid;gap:4px;align-content:start;padding:10px;border:1px solid var(--line,rgba(128,128,128,.3));border-radius:12px}
+.improw.must{border-color:var(--warn,#c80)}
+.impprev{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;margin-top:10px}
+.impimg{width:100%;height:auto;border-radius:10px;border:1px solid var(--line,rgba(128,128,128,.3))}
+.imptxt{white-space:pre-wrap;font-size:12px;max-height:420px;overflow:auto;margin:0;padding:10px;border-radius:10px;background:rgba(127,127,127,.08)}
+table.kv th{text-align:left;font-weight:600;white-space:nowrap;padding-right:14px}
+.dr-faq details{border:1px solid var(--line,rgba(128,128,128,.3));border-radius:12px;margin-top:8px}
+.dr-faq summary{cursor:pointer;padding:12px 14px;font-weight:700}
+.dr-faq details>div{padding:0 14px 12px;opacity:.85;line-height:1.5}
+</style></head><body>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -225,6 +240,25 @@ const daysTo=d=>Math.round((new Date(d+"T12:00:00")-new Date(today()+"T12:00:00"
 const ROLES={filme:"Personne filmée",diffuseur:"Diffuseur",producteur:"Producteur",agence:"Agence de mannequins"};
 const SUPPORTS=["Réseaux sociaux","Site internet","Affichage urbain","Presse et print","Télévision","Cinéma","Salons et événements","Usage interne"];
 const ZONES=["France","Union européenne","Monde entier","Autre (préciser)"];
+/* ---------- profils, types de contrats, rémunération (v2) ---------- */
+const KINDS={figurant:["filme","Personne filmée · figurant(e) d'un jour"],modele:["filme","Personne filmée · modèle"],acteur:["filme","Personne filmée · acteur / actrice"],pro:["filme","Mannequin ou acteur professionnel (représenté par une agence)"],
+  producteur:["producteur","Boîte de production"],agence:["agence","Agence de mannequins"],diffuseur:["diffuseur","Diffuseur (marque, annonceur, chaîne)"]};
+const KIND_SHORT={figurant:"Figurant(e)",modele:"Modèle",acteur:"Acteur / actrice",pro:"Mannequin / acteur pro",producteur:"Production",agence:"Agence de mannequins",diffuseur:"Diffuseur"};
+function kindOf(p){if(!p)return"";if(p.kind&&KINDS[p.kind])return p.kind;return({filme:"figurant",producteur:"producteur",agence:"agence",diffuseur:"diffuseur"})[p.type]||""}
+const CTYPES={
+  affichage:{l:"Campagne d'affichage",sup:["Affichage urbain","Presse et print"],months:12,obj:"une campagne d'affichage (affichage urbain, mobilier urbain, transports, points de vente, presse et print)"},
+  tv:{l:"Campagne TV",sup:["Télévision"],months:12,obj:"une campagne télévisée (chaînes de télévision, replay et télévision connectée)"},
+  ads:{l:"Campagne Ads (digital)",sup:["Réseaux sociaux","Site internet"],months:12,obj:"une campagne publicitaire en ligne (réseaux sociaux sponsorisés, display, vidéos pré-roll, sites internet)"},
+  libre:{l:"Autorisation standard",sup:[],months:0,obj:""}};
+const TRANSPORT={none:"Non pris en charge",justif:"Remboursés sur justificatifs",forfait:"Forfait"};
+function addMonths(d,m){const x=new Date(d+"T12:00:00");if(isNaN(x)||!(m>0))return"";const day=x.getDate();x.setMonth(x.getMonth()+Number(m));if(x.getDate()<day)x.setDate(0);else x.setDate(x.getDate()-1);return x.toISOString().slice(0,10)}
+function monthsBetween(a,b){const x=new Date(a+"T12:00:00"),y=new Date(b+"T12:00:00");if(isNaN(x)||isNaN(y))return 0;return Math.max(0,Math.round(((y-x)/864e5+1)/30.44))}
+/* IBAN : contrôle de la clé (ISO 13616, modulo 97) ; BIC : format ISO 9362 */
+function ibanNorm(v){return String(v||"").toUpperCase().replace(/[^A-Z0-9]/g,"")}
+function ibanOk(v){const s=ibanNorm(v);if(!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(s))return false;const r=(s.slice(4)+s.slice(0,4)).replace(/[A-Z]/g,c=>String(c.charCodeAt(0)-55));let m=0;for(const ch of r)m=(m*10+Number(ch))%97;return m===1}
+function bicOk(v){return /^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(String(v||"").toUpperCase().replace(/\s/g,""))}
+function ibanFmt(v){return ibanNorm(v).replace(/(.{4})/g,"$1 ").trim()}
+function ibanMask(v){const s=ibanNorm(v);return s?s.slice(0,4)+" •••• •••• "+s.slice(-4):""}
 
 /* ---------- state ---------- */
 const S={view:"lib",uid:null,db:null,user:null,downloads:null,profiles:{},ct:{},sig:{},names:{},loaded:false,err:"",sort:{k:"end",dir:1},filter:"all",open:null,draft:null,isAdmin:false,cfg:null,
@@ -272,8 +306,9 @@ const FEATURES=[
   ["pdf","Téléchargement PDF","Export du contrat et de ses signatures en PDF."],
   ["minors","Autorisations pour mineurs","Signature par les représentants légaux."],
   ["paid","Cession rémunérée","Montant de la rémunération dans le contrat."],
-  ["reminders","Rappels","Bandeaux « à signer » et « expire bientôt » dans l'appli. Les rappels par e-mail arriveront avec la version hébergée."],
-  ["import","Import papier","Numériser un contrat déjà signé sur papier. Le réglage est gardé pour quand le service sera prêt.",true],
+  ["reminders","Rappels","Bandeaux « à signer » et « expire bientôt » dans l'appli, et envoi des rappels par e-mail par un administrateur."],
+  ["import","Import papier","Scanner un contrat papier déjà signé : lecture locale, confirmation des informations, suivi de la date de fin."],
+  ["bank","Coordonnées bancaires","Chacun peut déposer son IBAN pour être payé par virement (visible par lui et les administrateurs)."],
   ["secu","Page Sécurité","L'onglet qui explique les protections de cette version."]
 ];
 function cfgMerge(d){d=d||{};const f={};for(const[k]of FEATURES)f[k]=!(d.features&&d.features[k]===false);
@@ -553,12 +588,15 @@ function adminView(){
   S.db.collection("sig").onSnapshot(s=>{S.sig={};s.docs.forEach(d=>S.sig[d.id]=d.data()||{});if(S.loaded)liveRender();else done()},fail);
 })();
 
+function kolabRefresh(){if(!CORE.kolabClients||Date.now()-(S.kolabAt||0)<15000)return;S.kolabAt=Date.now();
+  CORE.kolabClients().then(list=>{S.kolab={map:list,clients:list.map(x=>x.client)};const dl=document.getElementById("dr-clients");if(dl)dl.replaceChildren(...S.kolab.clients.map(n=>el("option",{value:n})))}).catch(()=>{})}
+kolabRefresh();
 function liveRender(){if(S.open||S.view==="lib"||S.view==="secu"||!S.profiles[S.uid])render()}
 /* ---------- contracts ---------- */
 function allContracts(){const out=[];for(const[owner,doc]of Object.entries(S.ct))for(const[cid,c]of Object.entries(doc||{})){if(c&&typeof c==="object"&&c.createdBy===owner)out.push({...c,id:cid})}return out}
 function mine(c){return c.createdBy===S.uid||Object.values(c.parties||{}).includes(S.uid)}
 const HASH={};
-function terms(c){const k=["project","production","brand","parties","minor","minorName","guardians","supports","zone","zoneOther","purpose","start","end","paid","amount","place","createdBy"];const o={};for(const x of k)o[x]=c[x]??null;o.parties=Object.fromEntries(Object.entries(c.parties||{}).filter(([,v])=>v).sort());o.supports=[...(c.supports||[])].sort();return JSON.stringify(o)}
+function terms(c){const k=["project","production","brand","parties","minor","minorName","guardians","supports","zone","zoneOther","purpose","start","end","paid","amount","place","createdBy"];const o={};for(const x of k)o[x]=c[x]??null;o.parties=Object.fromEntries(Object.entries(c.parties||{}).filter(([,v])=>v).sort());o.supports=[...(c.supports||[])].sort();for(const x of ["ctype","fkind","client","durMonths","transport","transportAmount","imported","agencyName","personName","signedOn"])if(c[x]!=null&&c[x]!==""&&c[x]!==0&&c[x]!==false)o[x]=c[x];return JSON.stringify(o)}
 async function sha(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,"0")).join("")}
 async function rehash(){for(const c of allContracts())HASH[c.id]=await sha(terms(c))}
 function required(c){return Object.entries(c.parties||{}).filter(([,u])=>u)}
@@ -587,7 +625,7 @@ async function render(){
   const me=S.profiles[S.uid];
   await names([S.uid,...allContracts().filter(mine).flatMap(c=>Object.values(c.parties||{}))]);
   computeRole();adminNav();
-  $("#who").textContent=(me?`${me.legal||S.names[S.uid]||"Mon compte"} · ${ROLES[me.type]}`:"Profil à compléter")+(S.role&&S.role!=="none"?" · "+PROLES[S.role]:"");
+  $("#who").textContent=(me?`${me.legal||S.names[S.uid]||"Mon compte"} · ${KIND_SHORT[kindOf(me)]||ROLES[me.type]}`:"Profil à compléter")+(S.role&&S.role!=="none"?" · "+PROLES[S.role]:"");
   if(S.view==="look")S.view="lib"; /* menu Apparence retiré : la charte Refraction s'applique à tous */
   if(S.view==="admin"&&!S.isAdmin)S.view="lib";
   if(S.role==="none"&&S.view!=="look"){app.replaceChildren(gateView());return}
@@ -606,61 +644,309 @@ async function render(){
 
 /* ---------- profile ---------- */
 function profileView(first){
-  const p=S.profiles[S.uid]||{};
+  const p=S.profiles[S.uid]||{};const k0=kindOf(p);
   const err=el("p",{class:"err",role:"alert"});
-  const f=el("form",{class:"card",onsubmit:async e=>{e.preventDefault();
+  const isCo=k=>["producteur","agence","diffuseur"].includes(k);
+  const coBox=el("div",{class:"grid2",hidden:!isCo(k0)},
+    el("label",{class:"f"},"Société",el("input",{name:"company",id:"p-company",value:p.company||"",maxlength:120,autocomplete:"organization"})),
+    el("label",{class:"f"},"SIRET (14 chiffres)",el("input",{name:"siret",id:"p-siret",value:p.siret||"",maxlength:20,inputmode:"numeric"})));
+  const agBox=el("label",{class:"f",hidden:k0!=="pro"},"Agence qui vous représente",el("input",{name:"company2",id:"p-agency",value:k0==="pro"?(p.company||""):"",maxlength:120}));
+  const f=el("form",{class:"card",style:"display:grid;gap:14px",onsubmit:async e=>{e.preventDefault();
     const d=Object.fromEntries(new FormData(f));
-    const out={type:d.type,legal:clip(d.legal,120),company:clip(d.company,120),email:clip(d.email,160),updatedAt:new Date().toISOString()};
-    if(!ROLES[out.type]){err.textContent="Choisissez un type de compte.";return}
+    const kind=KINDS[d.kind]?d.kind:"";
+    const out={type:kind?KINDS[kind][0]:"",kind,legal:clip(d.legal,120),company:clip(kind==="pro"?d.company2:d.company,120),siret:clip(String(d.siret||"").replace(/\s/g,""),14),
+      address:clip(d.address,200),phone:clip(d.phone,30),email:clip(d.email,160),updatedAt:new Date().toISOString()};
+    if(!out.type){err.textContent="Choisissez qui vous êtes.";return}
     if(out.legal.length<2){err.textContent="Indiquez votre nom légal tel qu'il figurera sur les contrats.";return}
-    if(out.email&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(out.email)){err.textContent="L'adresse e-mail n'est pas valide.";return}
+    if(isCo(kind)&&!out.company){err.textContent="Indiquez le nom de la société.";return}
+    if(out.siret&&!/^\d{14}$/.test(out.siret)){err.textContent="Le SIRET compte 14 chiffres.";return}
+    if(out.email&&!isEmail(out.email)){err.textContent="L'adresse e-mail n'est pas valide.";return}
+    if(out.phone&&!/^[+0-9 ().-]{6,30}$/.test(out.phone)){err.textContent="Le numéro de téléphone n'est pas valide.";return}
     try{await queueSet("profiles/"+S.uid,out);setView("lib")}catch(x){err.textContent="Enregistrement refusé. Vérifiez que l'appli vous est partagée en Contributeur."}
   }},
     el("h2",{text:first?"Créez votre profil":"Mon profil"}),
-    el("p",{class:"muted",text:"Ces informations apparaissent sur les autorisations que vous signez. Vous seul pouvez les modifier."}),
-    el("div",{class:"grid2"},
-      el("label",{class:"f"},"Type de compte",el("select",{name:"type",id:"p-type",required:true},el("option",{value:"",text:"Choisir…"}),Object.entries(ROLES).map(([k,v])=>el("option",{value:k,text:v,selected:p.type===k})))),
+    el("p",{class:"muted",text:"Votre identité figure sur les autorisations que vous signez. Selon qui vous êtes, l'appli vous propose le bon contrat type : seuls les champs personnalisables changent, le texte reste fixe. Vous seul pouvez modifier ce profil."}),
+    el("fieldset",{},el("legend",{text:"Qui êtes-vous ?"}),
+      el("div",{class:"chips",role:"radiogroup","aria-label":"Type de profil"},Object.entries(KINDS).map(([k,[,l]])=>el("label",{class:"chk"},el("input",{type:"radio",name:"kind",value:k,checked:k0===k,required:true,onchange:()=>{coBox.hidden=!isCo(k);agBox.hidden=k!=="pro"}}),l)))),
+    el("fieldset",{},el("legend",{text:"Identité"}),el("div",{class:"grid2"},
       el("label",{class:"f"},"Nom légal (prénom et nom)",el("input",{name:"legal",id:"p-legal",value:p.legal||"",maxlength:120,required:true,autocomplete:"name"})),
-      el("label",{class:"f"},"Société (diffuseur, producteur, agence)",el("input",{name:"company",id:"p-company",value:p.company||"",maxlength:120,autocomplete:"organization"})),
-      el("label",{class:"f"},"E-mail personnel pour les rappels",el("input",{name:"email",id:"p-email",type:"email",value:p.email||"",maxlength:160,autocomplete:"email"}))),
+      el("label",{class:"f"},"Adresse postale",el("input",{name:"address",id:"p-address",value:p.address||"",maxlength:200,autocomplete:"street-address"})),
+      el("label",{class:"f"},"E-mail (rappels et contrats)",el("input",{name:"email",id:"p-email",type:"email",value:p.email||"",maxlength:160,autocomplete:"email"})),
+      el("label",{class:"f"},"Téléphone",el("input",{name:"phone",id:"p-phone",type:"tel",value:p.phone||"",maxlength:30,autocomplete:"tel"}))),
+      agBox,coBox),
     err,
-    el("div",{class:"row"},el("button",{class:"btn primary",type:"submit",text:"Enregistrer"})));
+    el("div",{class:"row"},el("button",{class:"btn primary",type:"submit",text:"Enregistrer"})),
+    feat("bank")&&!first?bankBox():null);
   return f;
+}
+/* ---------- coordonnées bancaires (RGPD) ----------
+   Rangées à part (pay/<compte>) : lisibles par leur titulaire et par les administrateurs de l'appli seulement,
+   jamais par les autres utilisateurs. Clé IBAN contrôlée. Suppression à tout moment. */
+async function loadPay(uid){try{const d=await S.db.doc("pay/"+uid).get();return d.exists?d.data():null}catch(e){return null}}
+function bankBox(){
+  const box=el("section",{class:"card",style:"display:grid;gap:12px;margin-top:6px"},el("h3",{text:"Coordonnées bancaires (pour être payé par virement)"}),el("p",{class:"muted small",text:"Chargement…"}));
+  const err=el("p",{class:"err",role:"alert"});
+  const paint=pay=>{
+    box.replaceChildren(el("h3",{text:"Coordonnées bancaires (pour être payé par virement)"}),
+      el("p",{class:"small muted",text:"Facultatif. Servent uniquement à vous verser la rémunération prévue par vos autorisations. Visibles par vous et par les administrateurs de l'appli (ceux qui paient), jamais par les autres utilisateurs. Conservées tant que vous ne les supprimez pas, au plus jusqu'à la fin de vos contrats augmentée des délais comptables légaux (10 ans pour les pièces de paiement). Vous pouvez y accéder, les corriger ou les supprimer à tout moment."}),
+      pay?el("div",{class:"row"},el("span",{class:"pill ok",text:"Enregistrées"}),el("b",{class:"num",text:ibanMask(pay.iban)}),el("span",{class:"muted small",text:(pay.holder||"")+(pay.bic?" · "+pay.bic:"")}),el("span",{class:"grow"}),
+        el("button",{type:"button",class:"btn danger",onclick:()=>confirmDlg("Supprimer vos coordonnées bancaires ?",async()=>{try{await S.db.doc("pay/"+S.uid).delete();paint(null)}catch(e){err.textContent="Suppression refusée."}}),text:"Supprimer"})):null,
+      el("div",{class:"grid2"},
+        el("label",{class:"f"},"Titulaire du compte",el("input",{id:"b-holder",value:pay?pay.holder||"":"",maxlength:120,autocomplete:"cc-name"})),
+        el("label",{class:"f"},"IBAN",el("input",{id:"b-iban",value:"",placeholder:pay?ibanMask(pay.iban)+" (saisir pour remplacer)":"FR76 …",maxlength:42,autocomplete:"off",spellcheck:"false"})),
+        el("label",{class:"f"},"BIC",el("input",{id:"b-bic",value:pay?pay.bic||"":"",maxlength:11,autocomplete:"off",spellcheck:"false"}))),
+      el("label",{class:"chk"},el("input",{type:"checkbox",id:"b-ok"}),"J'accepte que ces coordonnées soient utilisées pour me payer les rémunérations prévues par mes autorisations."),
+      err,
+      el("div",{class:"row"},el("button",{type:"button",class:"btn primary",text:pay?"Mettre à jour":"Enregistrer mes coordonnées",onclick:async()=>{
+        err.textContent="";const q=id=>box.querySelector(id).value;
+        const iban=ibanNorm(q("#b-iban")||(pay&&pay.iban)||""),bic=String(q("#b-bic")).toUpperCase().replace(/\s/g,""),holder=clip(q("#b-holder"),120);
+        if(!box.querySelector("#b-ok").checked)return err.textContent="Cochez votre accord pour l'usage de ces coordonnées.";
+        if(holder.length<2)return err.textContent="Indiquez le titulaire du compte.";
+        if(!ibanOk(iban))return err.textContent="IBAN invalide : vérifiez les caractères (la clé de contrôle ne correspond pas).";
+        if(bic&&!bicOk(bic))return err.textContent="BIC invalide (8 ou 11 caractères).";
+        const rec={iban,bic,holder,consent:true,consentAt:nowIso(),updatedAt:nowIso()};
+        try{await S.db.doc("pay/"+S.uid).set(rec);paint(rec)}catch(e){err.textContent="Enregistrement refusé. Vérifiez que l'appli vous est partagée en Contributeur."}}})));
+  };
+  loadPay(S.uid).then(paint);
+  return box;
 }
 
 /* ---------- library ---------- */
+function ctParty(c,r){if(c.imported)return r==="agence"?c.agencyName||"":r==="producteur"?c.production||"":r==="diffuseur"?c.brand||"":r==="filme"?c.personName||"":"";
+  const u=c.parties&&c.parties[r];if(!u)return r==="producteur"?c.production||"":r==="diffuseur"?c.brand||"":"";const p=S.profiles[u]||{};return p.company||partyName(u)}
+function libFacets(list){const by=f=>[...new Set(list.map(x=>f(x.c)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"fr"));
+  return{agence:by(c=>ctParty(c,"agence")),prod:by(c=>c.production||ctParty(c,"producteur")),diff:by(c=>c.brand||ctParty(c,"diffuseur")),client:by(c=>c.client),projet:by(c=>c.project)}}
 function libView(){
   const list=allContracts().filter(mine).map(c=>({c,st:status(c)}));
   const n={all:list.length,wait:list.filter(x=>x.st.rank===1).length,soon:list.filter(x=>x.st.k==="warn").length,act:list.filter(x=>x.st.rank===3).length,exp:list.filter(x=>x.st.t==="Expiré").length,bad:list.filter(x=>x.st.rank===0).length};
   const F={all:()=>true,wait:x=>x.st.rank===1,act:x=>x.st.rank===3||x.st.k==="warn",exp:x=>x.st.t==="Expiré"};
-  const rows=list.filter(F[S.filter]||F.all);
+  S.lf=S.lf||{};const LF=S.lf;const fac=libFacets(list);
+  const LFN={type:x=>LF.type==="papier"?!!x.c.imported:(x.c.ctype||"libre")===LF.type,agence:x=>ctParty(x.c,"agence")===LF.agence,prod:x=>(x.c.production||ctParty(x.c,"producteur"))===LF.prod,diff:x=>(x.c.brand||ctParty(x.c,"diffuseur"))===LF.diff,client:x=>x.c.client===LF.client,projet:x=>x.c.project===LF.projet};
+  const rows=list.filter(F[S.filter]||F.all).filter(x=>Object.keys(LFN).every(k=>!LF[k]||LFN[k](x)));
   const k=S.sort.k,dir=S.sort.dir;
   rows.sort((a,b)=>{const va=k==="brand"?(a.c.brand||"").toLowerCase():k==="status"?a.st.rank:a.c[k]||"",vb=k==="brand"?(b.c.brand||"").toLowerCase():k==="status"?b.st.rank:b.c[k]||"";return(va>vb?1:va<vb?-1:0)*dir});
   const th=(key,lab)=>el("th",{scope:"col","aria-sort":k===key?(dir>0?"ascending":"descending"):null},el("button",{onclick:()=>{S.sort={k:key,dir:k===key?-dir:1};render()},text:lab+(k===key?(dir>0?" ↑":" ↓"):"")}));
   const toSign=list.filter(x=>x.c.parties&&Object.values(x.c.parties).includes(S.uid)&&sigOf(x.c,S.uid).state!=="ok");
+  const sel=(key,lab,opts)=>el("label",{class:"f lf"},lab,el("select",{id:"lf-"+key,onchange:e=>{LF[key]=e.target.value;render()}},el("option",{value:"",text:"Tous"}),opts.map(o=>Array.isArray(o)?el("option",{value:o[0],text:o[1],selected:LF[key]===o[0]}):el("option",{value:o,text:o,selected:LF[key]===o}))));
+  const active=Object.values(LF).some(Boolean);
   return[
     el("div",{class:"stats"},
       el("div",{class:"stat"},el("b",{class:"num",text:n.wait}),el("span",{class:"muted small",text:"en attente de signature"})),
       el("div",{class:"stat"},el("b",{class:"num",text:n.act}),el("span",{class:"muted small",text:"actifs"})),
       el("div",{class:"stat"},el("b",{class:"num",text:n.soon}),el("span",{class:"muted small",text:"expirent dans moins de 2 mois"})),
       el("div",{class:"stat"},el("b",{class:"num",text:n.exp}),el("span",{class:"muted small",text:"expirés"}))),
-    feat("reminders")&&n.soon?el("div",{class:"banner"},el("b",{text:`Rappel : ${n.soon} autorisation${n.soon>1?"s expirent":" expire"} dans moins de 2 mois. `}),"Préparez le renouvellement ou arrêtez la diffusion à la date de fin."):null,
+    feat("reminders")&&n.soon?el("div",{class:"banner"},el("b",{text:`Rappel : ${n.soon} autorisation${n.soon>1?"s expirent":" expire"} dans moins de 2 mois. `}),"Préparez le renouvellement ou arrêtez la diffusion à la date de fin.",
+      S.isAdmin?[" ",el("button",{class:"btn small",onclick:()=>mailReminders(list.filter(x=>x.st.k==="warn"||x.st.rank===1).map(x=>x.c)),text:"Envoyer les rappels par e-mail"})]:null):null,
     feat("reminders")&&toSign.length?el("div",{class:"banner"},el("b",{text:`${toSign.length} autorisation${toSign.length>1?"s":""} attend${toSign.length>1?"ent":""} votre signature. `}),toSign.slice(0,3).map((x,i)=>[i?" · ":"",el("a",{href:"#",onclick:e=>{e.preventDefault();S.open=x.c.id;render()},text:x.c.project})])):null,
     n.bad?el("div",{class:"banner",style:"border-left-color:var(--bad)"},`${n.bad} contrat${n.bad>1?"s ont":" a"} été modifié${n.bad>1?"s":""} après signature : les signatures concernées ne valent plus. Ouvrez-le pour faire re-signer.`):null,
     !feat("library")?el("div",{class:"card"},el("h2",{text:"Bibliothèque de contrats"}),el("p",{class:"muted",text:"La bibliothèque est désactivée par l'administrateur de l'appli."+(feat("reminders")&&toSign.length?" Les contrats à signer restent accessibles par le rappel ci-dessus.":"")})):
     el("div",{class:"card"},
       el("div",{class:"row"},el("h2",{class:"grow",text:"Bibliothèque de contrats"}),
         el("div",{class:"chips",role:"group","aria-label":"Filtre"},[["all","Tous"],["wait","En attente"],["act","Actifs"],["exp","Expirés"]].map(([v,l])=>el("button",{class:"btn"+(S.filter===v?" primary":""),onclick:()=>{S.filter=v;render()},text:l})))),
+      list.length?el("div",{class:"lfbar",role:"group","aria-label":"Filtres détaillés"},
+        sel("type","Type",[...Object.entries(CTYPES).map(([x,T])=>[x,T.l]),["papier","Contrats papier"]]),
+        sel("agence","Agence de mannequins",fac.agence),sel("prod","Boîte de production",fac.prod),sel("diff","Diffuseur",fac.diff),
+        sel("client","Client",fac.client),sel("projet","Projet",fac.projet),
+        active?el("button",{class:"btn small",onclick:()=>{S.lf={};render()},text:"Effacer les filtres"}):null):null,
       rows.length?el("div",{class:"tablewrap"},el("table",{},
         el("thead",{},el("tr",{},th("project","Projet"),th("brand","Marque / diffuseur"),th("start","Début"),th("end","Fin"),th("status","Statut"))),
         el("tbody",{},rows.map(({c,st})=>el("tr",{class:"click",tabindex:"0",onclick:()=>{S.open=c.id;render()},onkeydown:e=>{if(e.key==="Enter"){S.open=c.id;render()}}},
-          el("td",{},el("b",{text:c.project}),el("div",{class:"small muted",text:c.production||""})),
+          el("td",{},el("b",{text:c.project}),el("div",{class:"small muted",text:[c.client,c.production,CTYPES[c.ctype]&&c.ctype!=="libre"?CTYPES[c.ctype].l:""].filter(Boolean).join(" · ")})),
           el("td",{text:c.brand||"—"}),
           el("td",{class:"num",text:c.start||"—"}),
           el("td",{class:"num",text:c.end||"—"}),
-          el("td",{},el("span",{class:"pill "+st.k,text:st.t}))))))):
-        el("p",{class:"muted",text:list.length?"Aucun contrat dans ce filtre.":"Aucune autorisation pour l'instant. Créez la première avec « Nouvelle autorisation »."}))
+          el("td",{},el("span",{class:"pill "+st.k,text:st.t}),c.imported?[" ",el("span",{class:"pill idle",text:"Papier"})]:null)))))):
+        el("p",{class:"muted",text:list.length?"Aucun contrat avec ces filtres.":"Aucune autorisation pour l'instant. Créez la première avec « Nouvelle autorisation » ou scannez un contrat papier ci-dessous."})),
+    feat("import")&&feat("create")?importBox():null,
+    faqBox()
   ];
+}
+function faqBox(){const q=(window.JPUX_KIT&&window.JPUX_KIT.faq)||[];if(!q.length)return null;
+  return el("section",{class:"card dr-faq",id:"faq"},el("h2",{text:"Questions fréquentes"}),q.map(([a,b])=>el("details",{},el("summary",{text:a}),el("div",{text:b}))))}
+async function mailReminders(cs){
+  const jobs=[];for(const c of cs){const st=status(c);for(const[r,u]of required(c)){if(st.rank===1&&sigOf(c,u).state==="ok")continue;const p=S.profiles[u]||{};if(p.email)jobs.push({c,u,to:p.email,st})}}
+  if(!jobs.length)return alertDlg("Aucune adresse e-mail renseignée dans les profils concernés.");
+  confirmDlg(`Envoyer ${jobs.length} e-mail${jobs.length>1?"s":""} de rappel depuis votre messagerie ?`,async()=>{let ok=0,ko=0;
+    for(const j of jobs){const body=`Bonjour ${partyName(j.u)},\n\n`+(j.st.rank===1?`L'autorisation de droit à l'image « ${j.c.project} » attend votre signature.`:`L'autorisation de droit à l'image « ${j.c.project} » arrive à échéance le ${fmtD(j.c.end)}. Au-delà, l'image ne peut plus être diffusée sans nouvel accord.`)+
+      `\n\nOuvrez l'appli pour la consulter : ${window.KOLAB_URL||location.href}\n\n${(window.JP_AUTH&&JP_AUTH.orgName)||""}`;
+      try{await JP_AUTH.sendMail(j.to,(j.st.rank===1?"Signature attendue · ":"Fin de droit à l'image · ")+j.c.project,body);ok++}catch(e){ko++}}
+    alertDlg(ko?`${ok} envoyé(s), ${ko} en échec (messagerie non connectée ?).`:`${ok} rappel${ok>1?"s":""} envoyé${ok>1?"s":""}.`)});
+}
+function alertDlg(msg){const d=$("#dlg");d.replaceChildren(el("p",{text:msg}),el("div",{class:"row"},el("button",{class:"btn primary",onclick:()=>d.close(),text:"OK"})));d.showModal()}
+
+/* ---------- contrats papier : scan, lecture locale (OCR), confirmation ----------
+   La lecture du texte se fait dans le navigateur (Tesseract, fichiers servis par l'appli) : l'image ne quitte pas l'appareil.
+   Le recoupement par l'IA est facultatif et ne part qu'au clic, après accord. */
+const OCR={worker:null,loading:null};
+function absUrl(n){return new URL(n,location.href).href}
+function loadScript(src){return new Promise((ok,ko)=>{if(document.querySelector('script[data-src="'+src+'"]'))return ok();const s=document.createElement("script");s.src=src;s.dataset.src=src;s.onload=ok;s.onerror=()=>ko(new Error("load "+src));document.head.appendChild(s)})}
+async function ocrWorker(onp){
+  if(OCR.worker)return OCR.worker;
+  if(!OCR.loading)OCR.loading=(async()=>{
+    await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js");
+    const w=await Tesseract.createWorker("fra",1,{logger:m=>{if(OCR.onp&&m&&typeof m.progress==="number")OCR.onp(m.status,m.progress)}});
+    OCR.worker=w;return w})().catch(e=>{OCR.loading=null;throw e});
+  OCR.onp=onp;return OCR.loading;
+}
+/* (absUrl gardé pour usage futur) */
+/* image → canevas réduit (max 2400 px) en niveaux de gris, contraste renforcé */
+async function prepImage(file){
+  const url=URL.createObjectURL(file);
+  try{const img=await new Promise((ok,ko)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=ko;i.src=url});
+    const k=Math.min(1,2400/Math.max(img.naturalWidth,img.naturalHeight));const c=document.createElement("canvas");c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);
+    const g=c.getContext("2d");g.drawImage(img,0,0,c.width,c.height);const d=g.getImageData(0,0,c.width,c.height),p=d.data;
+    for(let i=0;i<p.length;i+=4){let v=.299*p[i]+.587*p[i+1]+.114*p[i+2];v=Math.max(0,Math.min(255,(v-128)*1.35+140));p[i]=p[i+1]=p[i+2]=v}
+    g.putImageData(d,0,0);return c}
+  finally{URL.revokeObjectURL(url)}
+}
+const MOIS={janvier:1,fevrier:2,février:2,mars:3,avril:4,mai:5,juin:6,juillet:7,aout:8,août:8,septembre:9,octobre:10,novembre:11,decembre:12,décembre:12};
+function isoD(y,m,d){y=Number(y);if(y<100)y+=2000;m=Number(m);d=Number(d);if(!(y>1990&&y<2100&&m>=1&&m<=12&&d>=1&&d<=31))return"";const x=new Date(Date.UTC(y,m-1,d));return x.getUTCDate()===d?x.toISOString().slice(0,10):""}
+function findDates(t){const out=[];
+  t.replace(/\b(\d{1,2})\s*[\/.\-]\s*(\d{1,2})\s*[\/.\-]\s*(\d{2,4})\b/g,(m,d,mo,y,i)=>{const v=isoD(y,mo,d);if(v)out.push({v,i});return m});
+  t.replace(/\b(\d{1,2})(?:er)?\s+(janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[uû]t|septembre|octobre|novembre|d[ée]cembre)\s+(\d{4})\b/gi,(m,d,mo,y,i)=>{const v=isoD(y,MOIS[mo.toLowerCase().replace("û","u")]||MOIS[mo.toLowerCase()],d);if(v)out.push({v,i});return m});
+  return out.sort((a,b)=>a.i-b.i)}
+const cleanVal=s=>String(s||"").replace(/[«»"“”]/g,"").replace(/\s+/g," ").replace(/^[\s:\-–—.]+|[\s,;.\-–—]+$/g,"").slice(0,120);
+function extractFields(text){
+  const t=String(text||"").replace(/\r/g,"");const flat=t.replace(/\s+/g," ");const low=flat.toLowerCase();const f={};
+  const g=(re,src=t)=>{const m=src.match(re);return m?cleanVal(m[1]):""};
+  f.project=g(/(?:projet|film|campagne|tournage|op[ée]ration)\s*(?:intitul[ée]e?)?\s*[:«"]\s*([^\n»"]{3,80})/i)||g(/(?:projet|campagne)\s+«\s*([^»]{3,80})»/i,flat);
+  f.production=g(/(?:soci[ée]t[ée] de production|producteur|production)\s*[:\-–]?\s*([A-Z0-9][^\n,;()]{2,60})/);
+  f.brand=g(/(?:marque|annonceur|diffuseur)\s*[:\-–]\s*([^\n,;()]{2,60})/i);
+  f.client=g(/\bclient\s*[:\-–]\s*([^\n,;()]{2,60})/i);
+  f.agency=g(/[Aa]gence(?:\s+de\s+mannequins?)?\s*[:\-–]?\s*([A-Z][^\n,;()]{2,60})/);
+  f.person=g(/(?:[Jj]e soussign[ée]e?|[Nn]om\s*(?:et\s*pr[ée]nom)?|[Mm]od[eè]le|[Ff]igurant\(?e?\)?|M\.|Mme|Madame|Monsieur)\s*[:\-–]?\s*([A-ZÉÈÀ][A-Za-zÀ-ÿ'’\- ]{2,50})/);
+  const ds=findDates(flat);
+  const near=(re)=>{const m=re.exec(flat);if(!m)return"";const d=ds.find(x=>x.i>=m.index&&x.i-m.index<80);return d?d.v:""};
+  f.start=near(/(?:\bdu\b|[àa] compter du|[àa] partir du|d[ée]but)/i);
+  f.end=near(/(?:\bau\b|jusqu'?au|fin(?: d'exploitation)?|expir)/i);
+  if(!f.start&&ds.length>=2)f.start=ds[0].v;
+  if(!f.end&&ds.length>=2)f.end=ds[ds.length-1].v;
+  f.signedOn=near(/(?:fait [àa][^\d]{0,40}?le\b|sign[ée]e? le\b)/i);
+  const dm=flat.match(/(?:dur[ée]e|p[ée]riode)[^.]{0,60}?(\d{1,3})\s*(mois|ans?|ann[ée]es?)/i);
+  if(dm)f.durMonths=Number(dm[1])*(/^mois/i.test(dm[2])?1:12);
+  if(f.start&&!f.end&&f.durMonths)f.end=addMonths(f.start,f.durMonths);
+  if(f.start&&f.end&&!f.durMonths)f.durMonths=monthsBetween(f.start,f.end)||"";
+  const amts=[];flat.replace(/(\d{1,3}(?:[ .\u00a0]?\d{3})*(?:,\d{1,2})?)\s*(?:€|euros?|eur\b)/gi,(m,n,i)=>{const v=Number(n.replace(/[ .\u00a0]/g,"").replace(",","."));if(v>0)amts.push({v,i,ctx:low.slice(Math.max(0,i-90),i)});return m});
+  const pay=amts.find(a=>/r[ée]mun[ée]ration|cachet|somme|montant|forfait|prix|honoraires/.test(a.ctx)&&!/transport|d[ée]placement|frais/.test(a.ctx))||amts.find(a=>!/transport|d[ée]placement|frais/.test(a.ctx));
+  if(pay)f.amount=pay.v;
+  const tr=amts.find(a=>/transport|d[ée]placement/.test(a.ctx));if(tr){f.transport="forfait";f.transportAmount=tr.v}
+  else if(/frais de (?:transport|d[ée]placement)[^.]{0,60}justificatif/i.test(flat))f.transport="justif";
+  else if(/frais de (?:transport|d[ée]placement)[^.]{0,50}(?:non|ne sont pas|exclu|hors)/i.test(flat)||/hors frais de (?:transport|d[ée]placement)/i.test(flat))f.transport="none";
+  const sup=[];const S2=[[/r[ée]seaux sociaux|instagram|facebook|tiktok|youtube|linkedin/i,"Réseaux sociaux"],[/site (?:internet|web)|en ligne|internet/i,"Site internet"],[/affichage|affiche|abribus|panneau|mobilier urbain|4\s*x\s*3/i,"Affichage urbain"],[/presse|print|magazine|catalogue|brochure/i,"Presse et print"],[/t[ée]l[ée]vision|\btv\b|t[ée]l[ée]vis[ée]/i,"Télévision"],[/cin[ée]ma/i,"Cinéma"],[/salon|[ée]v[ée]nement|point de vente|plv/i,"Salons et événements"],[/usage interne|intranet|interne/i,"Usage interne"]];
+  for(const[re,l]of S2)if(re.test(flat)&&SUPPORTS.includes(l))sup.push(l);f.supports=sup;
+  f.zone=/monde entier|monde|international/i.test(flat)?"Monde entier":/europe|union europ/i.test(flat)?"Union européenne":/france/i.test(flat)?"France":"";
+  if(f.zone&&!ZONES.includes(f.zone))f.zone="";
+  f.ctype=sup.includes("Télévision")?"tv":sup.includes("Affichage urbain")?"affichage":/ads|digital|sponsoris|display|pr[ée]-?roll/i.test(flat)||sup.includes("Réseaux sociaux")?"ads":"libre";
+  f.minor=/mineur|repr[ée]sentant(?:s)? l[ée]ga|autorit[ée] parentale/i.test(flat);
+  for(const k in f)if(f[k]===""||f[k]==null||(Array.isArray(f[k])&&!f[k].length))delete f[k];
+  return f;
+}
+const IMP_FIELDS=[["project","Projet"],["client","Client"],["production","Société de production"],["brand","Marque ou diffuseur"],["agency","Agence de mannequins"],["person","Personne filmée"],
+  ["ctype","Type de contrat"],["supports","Supports"],["zone","Zone"],["start","Début d'exploitation"],["durMonths","Durée (mois)"],["end","Fin d'exploitation"],["amount","Rémunération (€ HT, hors transport)"],["transport","Frais de transport"],["signedOn","Signé le"]];
+function importBox(){
+  const st={file:null,canvas:null,text:"",fields:{},ai:null,busy:false};
+  const box=el("section",{class:"card",id:"import",style:"display:grid;gap:12px"});
+  const msg=el("p",{class:"small muted",role:"status","aria-live":"polite"});
+  const err=el("p",{class:"err",role:"alert"});
+  const fileI=el("input",{type:"file",accept:"image/*",id:"imp-file",capture:"environment",class:"sr",onchange:e=>{const f=e.target.files&&e.target.files[0];if(f)read(f);e.target.value=""}});
+  const head=()=>[el("h3",{text:"Scanner un contrat papier"}),
+    el("p",{class:"small muted",text:"Photographiez ou importez un contrat déjà signé (photo ou scan en image, une page à la fois). Le texte est lu sur votre appareil : l'image n'est envoyée nulle part. Vous confirmez ensuite chaque information, au minimum la date de fin de droit à l'image."}),
+    el("div",{class:"row"},el("label",{class:"btn primary",for:"imp-file",text:"Choisir une photo ou un scan"}),fileI,
+      el("button",{type:"button",class:"btn",text:"Saisir à la main",onclick:()=>{st.fields={};st.text="";form()}}))];
+  box.append(...head(),msg,err);
+  async function read(file){
+    err.textContent="";if(!/^image\//.test(file.type))return err.textContent="Choisissez une image (JPG, PNG, HEIC exporté en JPG). Pour un PDF, faites une capture de chaque page.";
+    if(file.size>25e6)return err.textContent="Image trop lourde (25 Mo maximum).";
+    st.file=file;msg.textContent="Préparation de l'image…";
+    try{st.canvas=await prepImage(file)}catch(e){return err.textContent="Image illisible par le navigateur."}
+    msg.textContent="Lecture locale du texte… (le premier passage télécharge le moteur de lecture, environ 6 Mo)";
+    try{const w=await ocrWorker((s,p)=>{msg.textContent=(s==="recognizing text"?"Lecture du texte":"Chargement du moteur de lecture")+" · "+Math.round(p*100)+" %"});
+      const r=await w.recognize(st.canvas);st.text=(r&&r.data&&r.data.text)||"";st.conf=r&&r.data?Math.round(r.data.confidence):0;
+      st.fields=extractFields(st.text);msg.textContent=`Texte lu (fiabilité ${st.conf} %). ${Object.keys(st.fields).length} information(s) repérée(s) : vérifiez-les ci-dessous.`}
+    catch(e){st.text="";st.fields={};msg.textContent="";err.textContent="La lecture automatique n'a pas pu démarrer dans ce navigateur. Remplissez les champs à la main en vous aidant de l'image."}
+    form();
+  }
+  function form(){
+    const f0=st.fields,ai=st.ai||{};
+    const v=(k,d="")=>f0[k]!=null?f0[k]:d;
+    const conf={};const rows=[];
+    const inp=(k)=>{
+      if(k==="ctype")return el("select",{id:"imp-"+k},Object.entries(CTYPES).map(([x,T])=>el("option",{value:x,text:T.l,selected:v(k,"libre")===x})));
+      if(k==="transport")return el("select",{id:"imp-"+k},Object.entries(TRANSPORT).map(([x,l])=>el("option",{value:x,text:l,selected:v(k,"none")===x})));
+      if(k==="zone")return el("select",{id:"imp-"+k},el("option",{value:"",text:"—"}),ZONES.map(z=>el("option",{value:z,text:z,selected:v(k)===z})));
+      if(k==="supports")return el("div",{class:"chips",id:"imp-"+k},SUPPORTS.map(s=>el("label",{class:"chk"},el("input",{type:"checkbox",value:s,checked:(v(k,[])).includes(s)}),s)));
+      const type=["start","end","signedOn"].includes(k)?"date":["durMonths","amount"].includes(k)?"number":"text";
+      const i=el("input",{id:"imp-"+k,type,value:v(k),maxlength:140,step:k==="amount"?"0.01":"1",min:"0"});
+      if(k==="project")i.setAttribute("data-core-project","1");
+      if(k==="client")i.setAttribute("list","dr-clients");
+      return i};
+    const collect=()=>{const q=k=>box.querySelector("#imp-"+k);for(const[k]of IMP_FIELDS){const x=q(k);if(!x)continue;
+      if(k==="supports"){const a=[...x.querySelectorAll("input:checked")].map(i=>i.value);if(a.length)f0[k]=a;else delete f0[k]}
+      else if(x.value!=="")f0[k]=["durMonths","amount"].includes(k)?Number(x.value):x.value;else delete f0[k]}};
+    const aiNote=k=>{if(!(k in ai))return null;const a=ai[k],b=f0[k];const same=JSON.stringify(a)===JSON.stringify(b)||String(a)===String(b);
+      return same?el("span",{class:"pill ok small",text:"Confirmé par l'IA"}):el("button",{type:"button",class:"btn small",text:"IA : "+(Array.isArray(a)?a.join(", "):a)+" — utiliser",onclick:()=>{collect();f0[k]=a;form()}})};
+    for(const[k,l]of IMP_FIELDS){const c=el("input",{type:"checkbox",id:"imp-ok-"+k,checked:false});conf[k]=c;
+      rows.push(el("div",{class:"improw"+(k==="end"?" must":"")},el("label",{class:"f"},l+(k==="end"?" *":""),inp(k)),
+        el("label",{class:"chk small"},c,f0[k]!=null&&st.text?"Lu sur le scan · je confirme":"Je confirme"),aiNote(k)))}
+    const durI=()=>box.querySelector("#imp-durMonths"),stI=()=>box.querySelector("#imp-start"),enI=()=>box.querySelector("#imp-end");
+    const ferr=el("p",{class:"err",role:"alert"});
+    const panel=el("div",{class:"impform",style:"display:grid;gap:10px"},
+      st.canvas?el("details",{},el("summary",{text:"Voir l'image et le texte lu"}),el("div",{class:"impprev"},(()=>{const c=st.canvas;c.className="impimg";c.setAttribute("role","img");c.setAttribute("aria-label","Contrat scanné");return c})(),el("pre",{class:"imptxt",text:st.text||"(aucun texte lu)"}))):null,
+      el("div",{class:"impgrid"},rows),
+      el("label",{class:"chk"},el("input",{type:"checkbox",id:"imp-minor",checked:!!f0.minor}),"La personne filmée était mineure à la signature"),
+      el("p",{class:"small muted",text:"Cochez « je confirme » pour chaque information vérifiée sur l'original. La date de fin doit être confirmée : c'est elle qui déclenche les rappels d'expiration."}),
+      ferr,
+      el("div",{class:"row"},
+        el("button",{type:"button",class:"btn primary",text:"Enregistrer dans mes contrats",onclick:save}),
+        st.text?el("button",{type:"button",class:"btn",id:"imp-ai",text:"Faire recouper par l'IA",onclick:cross}):null,
+        el("button",{type:"button",class:"btn",text:"Tout confirmer",onclick:()=>Object.values(conf).forEach(c=>c.checked=true)}),
+        el("button",{type:"button",class:"btn",text:"Annuler",onclick:()=>{box.replaceChildren(...head(),msg,err);msg.textContent=""}})));
+    box.replaceChildren(...head(),msg,err,panel);
+    const sync=()=>{const e=addMonths(stI().value,Number(durI().value));if(e)enI().value=e};
+    stI().addEventListener("change",sync);durI().addEventListener("input",sync);
+    enI().addEventListener("change",()=>{const m=monthsBetween(stI().value,enI().value);if(m)durI().value=m});
+    async function save(){
+      ferr.textContent="";const q=k=>box.querySelector("#imp-"+k);
+      const o={imported:true,ctype:CTYPES[q("ctype").value]?q("ctype").value:"libre",project:clip(q("project").value,140),client:clip(q("client").value,140),production:clip(q("production").value,140),brand:clip(q("brand").value,140),
+        agencyName:clip(q("agency").value,140),personName:clip(q("person").value,120),supports:[...q("supports").querySelectorAll("input:checked")].map(x=>x.value).filter(s=>SUPPORTS.includes(s)),
+        zone:ZONES.includes(q("zone").value)?q("zone").value:"",start:q("start").value,end:q("end").value,durMonths:Math.max(0,Math.min(240,Math.round(Number(q("durMonths").value)||0))),
+        amount:Math.max(0,Math.round(Number(q("amount").value)*100)/100)||0,transport:TRANSPORT[q("transport").value]?q("transport").value:"none",signedOn:q("signedOn").value,minor:box.querySelector("#imp-minor").checked,
+        parties:{},verified:Object.fromEntries(IMP_FIELDS.map(([k])=>[k,!!conf[k].checked])),verifiedBy:S.uid,verifiedAt:nowIso(),ocr:st.text?{conf:st.conf||0}:null,aiChecked:!!st.ai};
+      if(o.transport==="forfait"&&f0.transportAmount)o.transportAmount=f0.transportAmount;
+      o.paid=o.amount>0;
+      if(!o.project)return ferr.textContent="Indiquez au moins le nom du projet.";
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(o.end))return ferr.textContent="Indiquez la date de fin de droit à l'image.";
+      if(!o.verified.end)return ferr.textContent="Confirmez la date de fin après l'avoir vérifiée sur l'original.";
+      if(o.start&&o.end<=o.start)return ferr.textContent="La date de fin doit suivre la date de début.";
+      for(const k of ["client","production","brand","agencyName","personName","zone","signedOn","start"])if(!o[k])delete o[k];
+      if(!o.durMonths)delete o.durMonths;
+      const cid=rid();const doc={...(S.ct[S.uid]||{})};
+      doc[cid]={...o,createdBy:S.uid,createdAt:nowIso(),updatedAt:nowIso()};
+      try{await queueSet("ct/"+S.uid,doc);S.open=cid;render()}catch(x){ferr.textContent="Enregistrement refusé ("+(x&&x.code||"erreur")+")."}
+    }
+    async function cross(){
+      collect();const b=box.querySelector("#imp-ai");let sample=null;try{sample=await CORE.use("sample")}catch(e){}
+      if(!sample){ferr.textContent="Le recoupement par l'IA n'est pas disponible ici.";return}
+      b.disabled=true;b.textContent="Recoupement…";ferr.textContent="";
+      const prompt="Tu lis le texte (OCR, peut contenir des erreurs) d'un contrat français de cession de droit à l'image. Extrais les informations et réponds UNIQUEMENT par un objet JSON avec ces clés, en omettant celles qui sont absentes : "+
+        "project (nom du projet ou de la campagne), client, production (société de production), brand (marque, annonceur ou diffuseur), agency (agence de mannequins), person (nom de la personne filmée), "+
+        "ctype (\"affichage\", \"tv\", \"ads\" ou \"libre\"), supports (tableau parmi "+JSON.stringify(SUPPORTS)+"), zone (parmi "+JSON.stringify(ZONES)+"), start et end (dates de début et de fin d'exploitation de l'image, AAAA-MM-JJ), "+
+        "durMonths (durée d'exploitation en mois, nombre), amount (rémunération en euros HT hors frais de transport, nombre), transport (\"none\", \"justif\" ou \"forfait\"), signedOn (date de signature AAAA-MM-JJ).\n\nTEXTE :\n"+st.text.slice(0,12000);
+      try{let opts={modelTier:"default"};try{const lim=await sample.limits();if(lim&&lim.images&&st.canvas){const blob=await new Promise(r=>st.canvas.toBlob(r,"image/jpeg",.85));if(blob)opts.images=[blob]}}catch(e){}
+        let val;if(typeof sample.json==="function")val=await sample.json(prompt+"\n\nSi une image est jointe, c'est le contrat original : sers-t'en pour corriger les erreurs de lecture.",opts);
+        else{const r=await sample(prompt,opts);val=JSON.parse((r.text.match(/\{[\s\S]*\}/)||["{}"])[0])}
+        const ok={};if(val&&typeof val==="object")for(const[k]of IMP_FIELDS){const x=val[k];if(x==null||x==="")continue;
+          if(k==="supports"){if(Array.isArray(x)){const a=x.filter(s=>SUPPORTS.includes(s));if(a.length)ok[k]=a}}
+          else if(["start","end","signedOn"].includes(k)){if(/^\d{4}-\d{2}-\d{2}$/.test(x))ok[k]=x}
+          else if(["durMonths","amount"].includes(k)){const n=Number(x);if(n>0)ok[k]=n}
+          else if(k==="ctype"){if(CTYPES[x])ok[k]=x}else if(k==="transport"){if(TRANSPORT[x])ok[k]=x}else if(k==="zone"){if(ZONES.includes(x))ok[k]=x}
+          else ok[k]=cleanVal(x)}
+        for(const k in ok)if(f0[k]==null)f0[k]=ok[k];
+        st.ai=ok;form();msg.textContent="Recoupement fait : les écarts entre la lecture locale et l'IA sont signalés à côté de chaque champ."}
+      catch(e){b.disabled=false;b.textContent="Faire recouper par l'IA";ferr.textContent=e&&e.code==="not_granted"?"Recoupement refusé : la lecture locale reste disponible.":e&&e.code==="rate_limited"?"Trop de demandes : réessayez dans quelques minutes.":"Le recoupement n'a pas abouti. Vérifiez les champs à la main."}
+    }
+  }
+  return box;
 }
 
 /* ---------- new contract ---------- */
@@ -668,7 +954,7 @@ function personPicker(role,state){
   const box=el("div",{class:"search"});const inp=el("input",{type:"search",id:"pick-"+role,placeholder:"Rechercher une personne…","aria-label":"Rechercher : "+ROLES[role],autocomplete:"off"});
   const hits=el("div",{class:"hits",hidden:true,role:"listbox"});
   const shown=el("div",{class:"picked"});
-  const paint=()=>{shown.replaceChildren();if(state.parties[role]){shown.append(el("span",{text:partyName(state.parties[role])}),state.parties[role]===S.uid?el("span",{class:"pill idle",text:"vous"}):null,state.lock===role?null:el("button",{type:"button",class:"btn small",onclick:()=>{state.parties[role]=null;paint()},text:"Retirer"}));inp.hidden=true}else inp.hidden=false};
+  const paint=()=>{shown.replaceChildren();if(state.parties[role]){shown.append(...[el("span",{text:partyName(state.parties[role])}),state.parties[role]===S.uid?el("span",{class:"pill idle",text:"vous"}):null,state.lock===role?null:el("button",{type:"button",class:"btn small",onclick:()=>{state.parties[role]=null;paint()},text:"Retirer"})].filter(Boolean));inp.hidden=true}else inp.hidden=false};
   let tm;const run=async()=>{let r=[];try{const x=await S.user.search(inp.value.trim());r=Array.isArray(x)?x:(x&&x.results)||[]}catch(e){}hits.replaceChildren(...r.slice(0,8).map(h=>el("button",{type:"button",role:"option",onclick:()=>{state.parties[role]=h.id;S.names[h.id]=h.name||"";hits.hidden=true;inp.value="";paint()}},el("span",{text:h.name||"Sans nom"}),S.profiles[h.id]?el("span",{class:"small muted",text:" · "+ROLES[S.profiles[h.id].type]}):null)));if(!r.length)hits.append(el("div",{class:"small muted",style:"padding:8px 10px",text:"Personne trouvée. La personne doit avoir accès à l'application."}));hits.hidden=false};
   inp.addEventListener("focus",run);inp.addEventListener("input",()=>{clearTimeout(tm);tm=setTimeout(run,200)});
   inp.addEventListener("blur",()=>setTimeout(()=>hits.hidden=true,200));
@@ -676,38 +962,61 @@ function personPicker(role,state){
   return el("label",{class:"f"},ROLES[role]+(role==="agence"?" (facultatif)":""),shown,box);
 }
 function newView(edit){
+  kolabRefresh();
   const me=S.profiles[S.uid];
-  const c=edit||{parties:{filme:null,diffuseur:null,producteur:null,agence:null},supports:[],zone:"France",purpose:"Publicitaire",paid:false,start:today(),end:"",minor:false};
+  const c=edit||{ctype:"",parties:{filme:null,diffuseur:null,producteur:null,agence:null},supports:[],zone:"France",purpose:"Publicitaire",paid:false,start:today(),end:"",minor:false,transport:"none"};
   const state={parties:{...c.parties},lock:edit?null:me.type};
   if(!edit)state.parties[me.type]=S.uid;
   const err=el("p",{class:"err",role:"alert"});
   const minorBox=el("div",{class:"grid2",hidden:!c.minor},
     el("label",{class:"f"},"Nom du mineur",el("input",{name:"minorName",id:"n-minorName",value:c.minorName||"",maxlength:120})),
     el("label",{class:"f"},"Représentants légaux (noms)",el("input",{name:"guardians",id:"n-guardians",value:c.guardians||"",maxlength:200})));
-  const amountBox=el("label",{class:"f",hidden:!c.paid},"Montant de la rémunération (€ HT)",el("input",{name:"amount",id:"n-amount",type:"number",min:"0",step:"0.01",value:c.amount||""}));
+  const trAmt=el("label",{class:"f",hidden:c.transport!=="forfait"},"Forfait transport (€ HT)",el("input",{name:"transportAmount",id:"n-tramt",type:"number",min:"0",step:"0.01",value:c.transportAmount||""}));
+  const payBox=el("div",{class:"grid2",hidden:!c.paid},
+    el("label",{class:"f"},"Rémunération prévue (€ HT, hors frais de transport)",el("input",{name:"amount",id:"n-amount",type:"number",min:"0",step:"0.01",value:c.amount||""})),
+    el("label",{class:"f"},"Frais de transport",el("select",{name:"transport",id:"n-transport",onchange:e=>trAmt.hidden=e.target.value!=="forfait"},Object.entries(TRANSPORT).map(([k,l])=>el("option",{value:k,text:l,selected:(c.transport||"none")===k})))),
+    trAmt);
+  const startI=el("input",{type:"date",name:"start",id:"n-start",value:c.start||"",required:true});
+  const endI=el("input",{type:"date",name:"end",id:"n-end",value:c.end||"",required:true});
+  const durI=el("input",{type:"number",name:"durMonths",id:"n-dur",min:"1",max:"240",step:"1",value:c.durMonths||(c.start&&c.end?monthsBetween(c.start,c.end)||"":""),placeholder:"ex. 12"});
+  const syncEnd=()=>{const e=addMonths(startI.value,Number(durI.value));if(e)endI.value=e};
+  startI.addEventListener("change",syncEnd);durI.addEventListener("input",syncEnd);
+  endI.addEventListener("change",()=>{const m=monthsBetween(startI.value,endI.value);if(m)durI.value=m});
+  const setType=t=>{const T=CTYPES[t];if(!T)return;f.querySelectorAll('input[name=supports]').forEach(x=>{if(T.sup.length)x.checked=T.sup.includes(x.value)});if(T.months&&!durI.value){durI.value=T.months;syncEnd()}};
+  const clients=(S.kolab&&S.kolab.clients)||[];
   const f=el("form",{class:"card",style:"display:grid;gap:16px",onsubmit:async e=>{e.preventDefault();
     const d=new FormData(f);
-    const o={project:clip(d.get("project"),140),production:clip(d.get("production"),140),brand:clip(d.get("brand"),140),
+    const o={ctype:CTYPES[d.get("ctype")]?d.get("ctype"):"libre",project:clip(d.get("project"),140),client:clip(d.get("client"),140),production:clip(d.get("production"),140),brand:clip(d.get("brand"),140),
       supports:d.getAll("supports").filter(s=>SUPPORTS.includes(s)),zone:ZONES.includes(d.get("zone"))?d.get("zone"):"France",zoneOther:clip(d.get("zoneOther"),140),
-      purpose:clip(d.get("purpose"),200),start:d.get("start"),end:d.get("end"),paid:d.get("paid")==="1",amount:d.get("paid")==="1"?Math.max(0,Math.round(Number(d.get("amount"))*100)/100):0,
+      purpose:clip(d.get("purpose"),200),start:d.get("start"),end:d.get("end"),durMonths:Math.max(0,Math.min(240,Math.round(Number(d.get("durMonths"))||0))),
+      paid:d.get("paid")==="1",amount:d.get("paid")==="1"?Math.max(0,Math.round(Number(d.get("amount"))*100)/100):0,
+      transport:d.get("paid")==="1"&&TRANSPORT[d.get("transport")]?d.get("transport"):"none",transportAmount:d.get("paid")==="1"&&d.get("transport")==="forfait"?Math.max(0,Math.round(Number(d.get("transportAmount"))*100)/100):0,
       minor:d.get("minor")==="1",minorName:clip(d.get("minorName"),120),guardians:clip(d.get("guardians"),200),place:clip(d.get("place"),120),
       parties:{filme:state.parties.filme||null,diffuseur:state.parties.diffuseur||null,producteur:state.parties.producteur||null,agence:state.parties.agence||null}};
+    o.fkind=kindOf(S.profiles[o.parties.filme])||"figurant";
     if(!o.project||!o.production)return err.textContent="Indiquez le projet et la société de production.";
     if(!o.parties.filme||!o.parties.diffuseur||!o.parties.producteur)return err.textContent="Choisissez la personne filmée, le diffuseur et le producteur.";
+    if(o.fkind==="pro"&&!o.parties.agence)return err.textContent="La personne filmée est un professionnel représenté : choisissez aussi son agence.";
     if(!o.supports.length)return err.textContent="Cochez au moins un support de diffusion.";
     if(!/^\d{4}-\d{2}-\d{2}$/.test(o.start)||!/^\d{4}-\d{2}-\d{2}$/.test(o.end)||o.end<=o.start)return err.textContent="La date de fin doit suivre la date de début.";
     if(o.minor&&(!o.minorName||!o.guardians))return err.textContent="Pour un mineur, indiquez son nom et ceux de ses représentants légaux.";
-    if(o.paid&&!(o.amount>0))return err.textContent="Indiquez le montant de la rémunération.";
+    if(o.paid&&!(o.amount>0))return err.textContent="Indiquez le montant de la rémunération prévue.";
+    if(o.transport==="forfait"&&!(o.transportAmount>0))return err.textContent="Indiquez le montant du forfait transport.";
+    if(!o.client)delete o.client;
     const cid=edit?edit.id:rid();
     const doc={...(S.ct[S.uid]||{})};
     doc[cid]={...o,createdBy:S.uid,createdAt:edit?edit.createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
     try{await queueSet("ct/"+S.uid,doc);S.draft=null;S.view="lib";S.open=cid;render()}catch(x){err.textContent="Enregistrement refusé ("+(x&&x.code||"erreur")+")."}
   }},
     el("h2",{text:edit?"Modifier l'autorisation":"Nouvelle autorisation de droit à l'image"}),
+    el("fieldset",{},el("legend",{text:"Type de contrat"}),
+      el("div",{class:"chips",role:"radiogroup","aria-label":"Type de contrat"},Object.entries(CTYPES).map(([k,T])=>el("label",{class:"chk"},el("input",{type:"radio",name:"ctype",value:k,checked:(c.ctype||"libre")===k,onchange:()=>setType(k)}),T.l))),
+      el("p",{class:"small muted",style:"margin:6px 0 0",text:"Le texte du contrat est fixe pour chaque type ; il s'adapte au profil de la personne filmée (figurant, modèle, acteur, professionnel représenté). Seuls les champs ci-dessous changent."})),
     el("fieldset",{},el("legend",{text:"Projet"}),el("div",{class:"grid2"},
-      el("label",{class:"f"},"Nom du projet",el("input",{name:"project",id:"n-project",value:c.project||"",maxlength:140,required:true})),
+      el("label",{class:"f"},"Nom du projet",el("input",{name:"project",id:"n-project",value:c.project||"",maxlength:140,required:true,"data-core-project":"1",onchange:e=>{const v=CORE.norm?CORE.norm(e.target.value):e.target.value.toLowerCase();const hit=((S.kolab&&S.kolab.map)||[]).find(x=>x.projects.some(p=>(CORE.norm?CORE.norm(p):p.toLowerCase())===v));const ci=f.querySelector("#n-client");if(hit&&ci&&!ci.value){ci.value=hit.client;const b=f.querySelector("#n-brand");if(b&&!b.value)b.value=hit.client}}})),
+      el("label",{class:"f"},"Client"+(clients.length?" (KOLABTOOLS)":""),el("input",{name:"client",id:"n-client",value:c.client||"",maxlength:140,list:"dr-clients",onchange:e=>{const b=f.querySelector("#n-brand");if(b&&!b.value)b.value=e.target.value}}),el("datalist",{id:"dr-clients"},clients.map(n=>el("option",{value:n})))),
       el("label",{class:"f"},"Société de production",el("input",{name:"production",id:"n-production",value:c.production||(me.type==="producteur"?me.company:"")||"",maxlength:140,required:true})),
-      el("label",{class:"f"},"Marque ou diffuseur (pour le tri)",el("input",{name:"brand",id:"n-brand",value:c.brand||(me.type==="diffuseur"?me.company:"")||"",maxlength:140})))),
+      el("label",{class:"f"},"Marque ou diffuseur",el("input",{name:"brand",id:"n-brand",value:c.brand||(me.type==="diffuseur"?me.company:"")||"",maxlength:140})))),
     el("fieldset",{},el("legend",{text:"Parties"}),el("div",{class:"grid2"},["filme","diffuseur","producteur","agence"].map(r=>personPicker(r,state))),
       feat("minors")||c.minor?el("label",{class:"chk",style:"justify-self:start"},el("input",{type:"checkbox",name:"minor",value:"1",id:"n-minor",checked:c.minor,onchange:e=>minorBox.hidden=!e.target.checked}),"La personne filmée est mineure : ses représentants légaux signent"):null,minorBox),
     el("fieldset",{},el("legend",{text:"Étendue de la cession"}),
@@ -715,12 +1024,14 @@ function newView(edit){
       el("div",{class:"grid2"},
         el("label",{class:"f"},"Zone géographique",el("select",{name:"zone",id:"n-zone"},ZONES.map(z=>el("option",{value:z,text:z,selected:c.zone===z})))),
         el("label",{class:"f"},"Précision sur la zone",el("input",{name:"zoneOther",id:"n-zoneOther",value:c.zoneOther||"",maxlength:140})),
-        el("label",{class:"f"},"Début d'exploitation",el("input",{type:"date",name:"start",id:"n-start",value:c.start||"",required:true})),
-        el("label",{class:"f"},"Fin d'exploitation",el("input",{type:"date",name:"end",id:"n-end",value:c.end||"",required:true})),
+        el("label",{class:"f"},"Début d'exploitation",startI),
+        el("label",{class:"f"},"Durée d'exploitation de l'image (mois)",durI),
+        el("label",{class:"f"},"Fin d'exploitation",endI),
         el("label",{class:"f"},"Finalité",el("input",{name:"purpose",id:"n-purpose",value:c.purpose||"",maxlength:200})),
-        el("label",{class:"f"},"Rémunération",el("select",{name:"paid",id:"n-paid",onchange:e=>amountBox.hidden=e.target.value!=="1"},el("option",{value:"0",text:"Cession gratuite",selected:!c.paid}),feat("paid")||c.paid?el("option",{value:"1",text:"Cession rémunérée",selected:c.paid}):null)),
-        amountBox,
         el("label",{class:"f"},"Lieu de signature",el("input",{name:"place",id:"n-place",value:c.place||"",maxlength:120,placeholder:"Ex. Lille"})))),
+    el("fieldset",{},el("legend",{text:"Rémunération"}),
+      el("label",{class:"f",style:"max-width:340px"},"Cession",el("select",{name:"paid",id:"n-paid",onchange:e=>payBox.hidden=e.target.value!=="1"},el("option",{value:"0",text:"Cession gratuite",selected:!c.paid}),feat("paid")||c.paid?el("option",{value:"1",text:"Cession rémunérée",selected:c.paid}):null)),
+      payBox),
     err,
     el("div",{class:"row"},el("button",{class:"btn primary",type:"submit",text:edit?"Enregistrer les modifications":"Créer et inviter à signer"}),edit?el("button",{class:"btn",type:"button",onclick:()=>{S.draft=null;S.view="lib";S.open=edit.id;render()},text:"Annuler"}):null),
     el("p",{class:"small muted",text:"Une fois la première signature posée, le contrat ne peut plus être modifié sans annuler les signatures existantes."}));
@@ -728,23 +1039,55 @@ function newView(edit){
 }
 
 /* ---------- detail ---------- */
+const FK_QUAL={figurant:"en qualité de figurant(e)",modele:"en qualité de modèle",acteur:"en qualité d'interprète (acteur ou actrice)",pro:"en qualité de mannequin ou d'artiste professionnel(le)"};
+function eur(n){return Number(n||0).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €"}
 function clauseText(c){
   const zone=c.zone==="Autre (préciser)"?(c.zoneOther||"zone à préciser"):c.zone+(c.zoneOther?` (${c.zoneOther})`:"");
   const filme=c.minor?`${c.minorName}, mineur(e), représenté(e) par ${c.guardians}`:partyName(c.parties.filme);
-  return[
-    `Entre ${filme} (ci-après « la personne filmée »)${c.parties.agence?`, représenté(e) par l'agence ${partyName(c.parties.agence)}`:""}, ${partyName(c.parties.producteur)} pour la société de production ${c.production} (ci-après « le producteur ») et ${partyName(c.parties.diffuseur)}${c.brand?` pour ${c.brand}`:""} (ci-après « le diffuseur »).`,
-    `Article 1 — Objet. La personne filmée autorise le producteur à fixer son image et sa voix dans le cadre du projet « ${c.project} », et le diffuseur à les reproduire et à les diffuser selon les conditions ci-dessous.`,
+  const T=CTYPES[c.ctype]&&c.ctype!=="libre"?CTYPES[c.ctype]:null;const fk=c.fkind&&FK_QUAL[c.fkind]?c.fkind:null;
+  const dur=c.durMonths?`pour une durée d'exploitation de l'image de ${c.durMonths} mois, `:"";
+  const tr=c.transport==="justif"?" Les frais de transport, exclus de cette somme, sont remboursés sur présentation des justificatifs.":c.transport==="forfait"?` Les frais de transport, exclus de cette somme, font l'objet d'un forfait de ${eur(c.transportAmount)} HT.`:c.paid&&c.transport==="none"?" Les frais de transport ne sont pas compris dans cette somme et ne sont pas pris en charge.":"";
+  const out=[
+    (T?`Contrat type · ${T.l}. `:"")+`Entre ${filme}${fk?" "+FK_QUAL[fk]:""} (ci-après « la personne filmée »)${c.parties.agence?`, représenté(e) par l'agence ${partyName(c.parties.agence)}`:""}, ${partyName(c.parties.producteur)} pour la société de production ${c.production} (ci-après « le producteur ») et ${partyName(c.parties.diffuseur)}${c.brand?` pour ${c.brand}`:""}${c.client&&c.client!==c.brand?`, client ${c.client}`:""} (ci-après « le diffuseur »).`,
+    `Article 1 — Objet. La personne filmée autorise le producteur à fixer son image et sa voix dans le cadre du projet « ${c.project} »${T?`, destiné à ${T.obj}`:""}, et le diffuseur à les reproduire et à les diffuser selon les conditions ci-dessous.`+(fk==="acteur"||fk==="pro"?" La présente autorisation porte sur l'image ; la prestation artistique et ses droits voisins relèvent du contrat d'engagement conclu par ailleurs.":""),
     `Article 2 — Supports. ${c.supports.join(", ")}.`,
     `Article 3 — Territoire. ${zone}.`,
-    `Article 4 — Durée. Du ${fmtD(c.start)} au ${fmtD(c.end)}. Au-delà, toute diffusion nouvelle est interdite sans nouvel accord écrit.`,
+    `Article 4 — Durée. ${dur?dur[0].toUpperCase()+dur.slice(1):""}du ${fmtD(c.start)} au ${fmtD(c.end)}. Au-delà, toute diffusion nouvelle est interdite sans nouvel accord écrit.`,
     `Article 5 — Finalité. ${c.purpose||"Non précisée"}. Toute utilisation portant atteinte à la dignité ou à la réputation de la personne filmée est exclue.`,
-    `Article 6 — Contrepartie. ${c.paid?`Cession consentie moyennant ${Number(c.amount).toLocaleString("fr-FR",{minimumFractionDigits:2})} € HT.`:"Cession consentie à titre gratuit."}`,
-    `Article 7 — Données personnelles. Les données des parties sont traitées pour la seule gestion de la présente autorisation et conservées pendant sa durée augmentée de la prescription légale. Chaque partie dispose d'un droit d'accès et de rectification.`
-  ];
+    `Article 6 — Contrepartie. ${c.paid?`Cession consentie moyennant une rémunération de ${eur(c.amount)} HT, hors frais de transport, versée par virement sur le compte communiqué par ${c.parties.agence?"l'agence":"la personne filmée"}.${tr}`:"Cession consentie à titre gratuit."}`,
+    `Article 7 — Données personnelles. Les données des parties sont traitées pour la seule gestion de la présente autorisation et conservées pendant sa durée augmentée de la prescription légale. Les coordonnées bancaires ne servent qu'au paiement. Chaque partie dispose d'un droit d'accès, de rectification et d'effacement.`];
+  return out;
+}
+function paperView(c){
+  const st=status(c);const V=c.verified||{};
+  const row=(l,v,k)=>v?el("tr",{},el("th",{scope:"row",text:l}),el("td",{text:v}),el("td",{},V[k]?el("span",{class:"pill ok small",text:"Vérifié"}):el("span",{class:"pill idle small",text:"Non vérifié"}))):null;
+  return el("div",{class:"card",style:"display:grid;gap:16px"},
+    el("div",{class:"row"},el("button",{class:"btn",onclick:()=>{S.open=null;render()},text:"← Retour"}),el("span",{class:"grow"}),el("span",{class:"pill idle",text:"Contrat papier"}),el("span",{class:"pill "+st.k,text:st.t})),
+    el("div",{},el("h2",{text:c.project}),el("p",{class:"muted small",style:"margin:4px 0 0",text:`Importé et vérifié le ${new Date(c.verifiedAt||c.createdAt).toLocaleDateString("fr-FR")} par ${partyName(c.verifiedBy||c.createdBy)}`+(c.ocr?` · lecture locale ${c.ocr.conf} %`:"")+(c.aiChecked?" · recoupé par l'IA":"")})),
+    el("div",{class:"tablewrap"},el("table",{class:"kv"},el("tbody",{},
+      row("Type",CTYPES[c.ctype]?CTYPES[c.ctype].l:"","ctype"),row("Client",c.client,"client"),row("Production",c.production,"production"),row("Marque / diffuseur",c.brand,"brand"),
+      row("Agence",c.agencyName,"agency"),row("Personne filmée",c.personName+(c.minor?" (mineure)":""),"person"),row("Supports",(c.supports||[]).join(", "),"supports"),row("Zone",c.zone,"zone"),
+      row("Début",c.start?fmtD(c.start):"","start"),row("Durée",c.durMonths?c.durMonths+" mois":"","durMonths"),row("Fin du droit à l'image",fmtD(c.end),"end"),
+      row("Rémunération",c.amount?eur(c.amount)+" HT hors transport":"","amount"),row("Transport",c.amount||c.transport!=="none"?TRANSPORT[c.transport]+(c.transportAmount?" · "+eur(c.transportAmount):""):"","transport"),row("Signé le",c.signedOn?fmtD(c.signedOn):"","signedOn")))),
+    el("p",{class:"small muted",text:"Gardez l'original papier : cette fiche sert au suivi des dates et aux rappels d'expiration, elle ne le remplace pas."}),
+    c.createdBy===S.uid?el("div",{class:"row"},el("button",{class:"btn danger",onclick:()=>confirmDlg("Retirer cette fiche de vos contrats ?",async()=>{const doc={...(S.ct[S.uid]||{})};delete doc[c.id];await queueSet("ct/"+S.uid,doc);S.open=null;render()}),text:"Supprimer la fiche"})):null);
+}
+function payAdminBox(c){
+  if(!S.isAdmin||!c.paid)return null;
+  const who=[["filme",c.parties.filme],["agence",c.parties.agence]].filter(([,u])=>u);
+  const box=el("section",{class:"card",style:"display:grid;gap:8px;padding:14px"},el("h3",{text:"Paiement (visible par les administrateurs)"}),el("p",{class:"small muted",text:"Chargement des coordonnées…"}));
+  Promise.all(who.map(async([r,u])=>[r,u,await loadPay(u)])).then(list=>{
+    box.replaceChildren(el("h3",{text:"Paiement (visible par les administrateurs)"}),
+      el("p",{class:"small",text:`À verser : ${eur(c.amount)} HT hors transport`+(c.transport==="forfait"?` + forfait transport ${eur(c.transportAmount)}`:c.transport==="justif"?" + frais de transport sur justificatifs":"")+(c.parties.agence?" · à l'agence (elle reverse au talent).":".")}),
+      list.map(([r,u,p])=>el("div",{class:"row"},el("b",{text:(r==="agence"?"Agence · ":"")+partyName(u)}),
+        p?[el("span",{class:"num",text:ibanMask(p.iban)}),el("button",{class:"btn small",onclick:e=>{const b=e.target;b.replaceWith(el("span",{class:"num",text:ibanFmt(p.iban)+(p.bic?" · "+p.bic:"")+" · "+p.holder}))},text:"Afficher l'IBAN"})]:el("span",{class:"muted small",text:"aucune coordonnée bancaire déposée"}))));
+  });
+  return box;
 }
 function detailView(cid){
   const c=allContracts().find(x=>x.id===cid);
   if(!c||!mine(c)){S.open=null;return libView()}
+  if(c.imported)return paperView(c);
   const st=status(c);const myRole=Object.entries(c.parties).find(([,u])=>u===S.uid)?.[0];
   const anySig=required(c).some(([,u])=>sigOf(c,u).state!=="none");
   const mySig=sigOf(c,S.uid);
@@ -757,6 +1100,7 @@ function detailView(cid){
     el("div",{},el("h2",{text:c.project}),el("p",{class:"muted small",style:"margin:4px 0 0"},"Réf. ",el("span",{class:"num",text:c.id.slice(0,8).toUpperCase()})," · empreinte ",el("span",{class:"num",text:(HASH[c.id]||"").slice(0,16)}))),
     el("div",{class:"deed"},clauseText(c).map(t=>el("p",{text:t}))),
     el("h3",{text:"Signatures"}),parties,
+    payAdminBox(c),
     el("div",{class:"row"},
       feat("signature")&&myRole&&mySig.state!=="ok"?el("button",{class:"btn primary",onclick:()=>signDialog(c),text:"Signer cette autorisation"}):null,
       feat("pdf")?el("button",{class:"btn",onclick:()=>pdf(c),disabled:!window.jspdf,text:"Télécharger le PDF"}):null,
@@ -822,28 +1166,45 @@ async function pdf(c){
 
 /* ---------- security ---------- */
 function secuView(){
-  const ok=t=>el("li",{},el("span",{class:"pill ok",text:"OK"})," ",t);
-  const todo=t=>el("li",{},el("span",{class:"pill warn",text:"V2"})," ",t);
+  const ok=t=>el("li",{},el("span",{class:"pill ok",text:"En place"})," ",t);
+  const lim=t=>el("li",{},el("span",{class:"pill warn",text:"Limite"})," ",t);
+  const nx=t=>el("li",{},el("span",{class:"pill idle",text:"À venir"})," ",t);
+  const ul=(...x)=>el("ul",{class:"plain",style:"list-style:none;padding:0;display:grid;gap:8px"},x);
   return el("div",{class:"card",style:"display:grid;gap:14px"},el("h2",{text:"Sécurité de cette version"}),
-    el("ul",{class:"plain",style:"list-style:none;padding:0"},
-      ok("Aucune clé secrète dans le code de la page."),
-      ok("Chacun ne peut écrire que son propre profil, ses propres contrats et ses propres signatures : la base le refuse pour les autres, même pour le propriétaire de l'appli."),
-      ok("Identifiants de contrats aléatoires sur 128 bits : on ne peut pas les deviner."),
-      ok("Chaque signature est liée à l'empreinte SHA-256 du texte : toute modification après coup l'invalide et s'affiche en rouge."),
-      ok("Saisies limitées en longueur et affichées sans interprétation HTML."),
-      ok("Accès réservé aux comptes Claude à qui l'appli est partagée : pas d'inscription ouverte."),
-      ok("Back-office réservé à l'administrateur (le propriétaire de l'appli) : la base refuse toute modification des services et de la charte par un autre compte."),
-      ok("Rôles, invitations et accès module par module écrits par l'administrateur seul ; chacun ne peut déposer que sa propre demande d'accès, et seul l'administrateur lit les demandes."),
-      todo("Cloisonnement de lecture par contrat : ici, toute personne ayant accès à l'appli pourrait lire les contrats des autres par des moyens techniques. La version hébergée (Supabase, sécurité ligne par ligne) le corrigera. D'ici là, ne partagez l'appli qu'avec des testeurs de confiance."),
-      todo("Envoi des mails de rappel et d'expiration, mineurs, logos, signalements, calendrier, chat, cagnotte."),
-      todo("Signature électronique qualifiée (eIDAS) si vous visez une valeur probante maximale.")));
+    el("p",{class:"small muted",text:"État vérifié le "+fmtD("2026-11-23")+". Chaque point ci-dessous décrit ce que l'appli fait réellement aujourd'hui."}),
+    el("h3",{text:"Accès"}),ul(
+      ok("Connexion par e-mail et mot de passe propre à l'agence (pas de compte Google) : mot de passe jamais stocké en clair, dérivé par PBKDF2-SHA256 sur 150 000 tours avec un sel aléatoire."),
+      ok("Comptes créés uniquement sur invitation : code à usage unique valable 14 jours. Pas d'inscription ouverte."),
+      ok("Back-office (comptes, services, sauvegarde) réservé aux administrateurs ; la base refuse toute écriture de configuration par un autre compte."),
+      ok("Rôles et accès module par module écrits par l'administrateur seul ; chacun ne peut déposer que sa propre demande d'accès.")),
+    el("h3",{text:"Contrats et signatures"}),ul(
+      ok("Chacun ne peut écrire que son propre profil, ses propres contrats et ses propres signatures : la base refuse les autres écritures, y compris pour le propriétaire."),
+      ok("Identifiants de contrats aléatoires sur 128 bits."),
+      ok("Chaque signature est liée à l'empreinte SHA-256 du texte et des champs du contrat : toute modification après coup l'invalide et s'affiche en rouge."),
+      ok("Contrats types à texte fixe : seuls les champs personnalisables (parties, supports, zone, durée, rémunération, transport) varient, et ils sont contrôlés (dates cohérentes, montants positifs, agence obligatoire pour un professionnel représenté)."),
+      ok("Saisies limitées en longueur et affichées sans interprétation HTML (pas d'injection de code)."),
+      lim("Lecture des contrats : toute personne ayant accès à l'appli pourrait, par des moyens techniques, lire les contrats des autres. Ne partagez l'appli qu'avec des personnes de confiance ; le cloisonnement par contrat arrivera avec la version hébergée.")),
+    el("h3",{text:"Données personnelles (RGPD)"}),ul(
+      ok("Coordonnées bancaires rangées à part, lisibles seulement par leur titulaire et par les administrateurs : la base le refuse aux autres comptes."),
+      ok("IBAN contrôlé (clé ISO 13616) et BIC vérifié avant enregistrement ; affichage masqué par défaut ; accord explicite demandé et daté ; suppression possible à tout moment par le titulaire."),
+      ok("Profils : SIRET (14 chiffres), e-mail et téléphone vérifiés à la saisie."),
+      ok("Contrats papier : le texte est lu dans votre navigateur par le moteur open source Tesseract (seul le moteur est téléchargé, une fois). L'image n'est ni envoyée ni conservée ; seules les informations que vous confirmez sont enregistrées."),
+      ok("Recoupement par l'IA facultatif : il ne part qu'au clic, après votre accord, et seulement pour le contrat affiché."),
+      ok("Aucune clé secrète dans le code de la page, aucun cookie publicitaire ni traceur.")),
+    el("h3",{text:"Rappels"}),ul(
+      ok("Bandeaux « à signer » et « expire bientôt » dans l'appli, y compris pour les contrats papier importés."),
+      ok("Rappels par e-mail : un administrateur les envoie en un clic depuis sa messagerie Gmail connectée (signatures en attente et fins de droit à moins de 2 mois)."),
+      nx("Envoi automatique programmé, sans clic, avec la version hébergée.")),
+    el("h3",{text:"Valeur juridique"}),ul(
+      lim("Signature électronique simple (dessinée, horodatée, liée à l'empreinte). Pour une valeur probante maximale, passez par un prestataire de signature qualifiée eIDAS."),
+      lim("Modèles de clauses à faire valider par un avocat avant usage commercial.")));
 }
 </script>
 <!-- jp-ux-app:debut — Branchements des 20 fonctions propres à Droit à l'image -->
 <style id="jp-ux-app-css">@media print{.app{display:block!important;height:auto!important}main,.work{overflow:visible!important;height:auto!important}}body>header{background:var(--paper,var(--sheet,var(--bg,#fff)))}</style>
 <script id="jp-ux-app-js">
 window.JPUX_CONFIG={"contactEmail": "jeremypynthe@gmail.com"};
-window.JPUX_KIT={"app": "Droit à l'image", "scope": "#app", "hover": ".card", "sticky": "body>header", "copyFields": "", "hide": "header nav", "version": "21 novembre 2026", "faq": [["Comment créer une autorisation ?", "Onglet « Nouvelle autorisation » : renseignez le projet, les personnes concernées, les supports, la zone et la durée, puis enregistrez. Chaque partie reçoit le contrat à signer."], ["Que se passe-t-il si je modifie un contrat signé ?", "Les signatures déjà posées sont annulées : chaque partie doit signer à nouveau la nouvelle version. L'appli vous demande de confirmer avant."], ["Puis-je supprimer une autorisation ?", "Oui, tant qu'aucune signature n'a été posée, et seulement si vous l'avez créée. Une fenêtre vous demande de confirmer."], ["Comment obtenir le PDF ?", "Ouvrez le contrat depuis « Mes contrats » puis utilisez le bouton PDF."], ["Raccourcis clavier", "« / » ou Ctrl / ⌘ K : rechercher dans la page (Entrée pour le résultat suivant, Maj + Entrée pour le précédent). Échap : fermer la recherche, une fenêtre ou un menu."], ["Comment imprimer ?", "Bouton Aide › Version imprimable, ou Ctrl / ⌘ P : les menus et boutons sont masqués et le titre et la date d'impression sont ajoutés en haut."], ["Quelles données sont gardées dans mon navigateur ?", "Seulement vos réglages d'affichage et vos choix récents. Aucun cookie publicitaire ni traceur. Vous pouvez les effacer depuis Aide › Cookies et données."]]};
+window.JPUX_KIT={"app": "Droit à l'image", "scope": "#app", "hover": ".card", "sticky": "body>header", "copyFields": "", "hide": "header nav", "version": "21 novembre 2026", "faq": [["Quel contrat choisir ?", "Dans « Nouvelle autorisation », choisissez Campagne d'affichage, Campagne TV, Campagne Ads (digital) ou Autorisation standard. Le texte est fixe ; les supports et une durée de 12 mois sont proposés d'office, vous ajustez les champs."], ["Pourquoi renseigner qui je suis dans mon profil ?", "Figurant(e), modèle, acteur, professionnel représenté, production, agence ou diffuseur : le contrat type s'adapte (qualité de la personne filmée, agence obligatoire pour un professionnel représenté). Seuls les champs personnalisables changent."], ["Comment est indiquée la rémunération ?", "En euros HT, hors frais de transport. Les frais de transport sont précisés à part : non pris en charge, remboursés sur justificatifs ou forfait."], ["Où déposer mon IBAN ?", "Mon profil › Coordonnées bancaires. L'IBAN est vérifié, masqué à l'affichage, visible seulement par vous et les administrateurs qui paient, et supprimable à tout moment."], ["Comment scanner un ancien contrat papier ?", "En bas de « Mes contrats », section « Scanner un contrat papier » : photographiez la page, le texte est lu sur votre appareil, puis confirmez chaque information, au minimum la date de fin. Vous pouvez demander à l'IA de recouper la lecture."], ["Comment filtrer la bibliothèque ?", "Sous les boutons Tous / En attente / Actifs / Expirés : filtres par type, agence de mannequins, boîte de production, diffuseur, client et projet KOLABTOOLS."], ["Comment créer une autorisation ?", "Onglet « Nouvelle autorisation » : renseignez le projet (les projets et clients KOLABTOOLS sont proposés), les parties, les supports, la zone et la durée, puis enregistrez. Chaque partie reçoit le contrat à signer."], ["Que se passe-t-il si je modifie un contrat signé ?", "Les signatures déjà posées sont annulées : chaque partie doit signer à nouveau la nouvelle version. L'appli vous demande de confirmer avant."], ["Puis-je supprimer une autorisation ?", "Oui, tant qu'aucune signature n'a été posée, et seulement si vous l'avez créée. Une fenêtre vous demande de confirmer."], ["Comment obtenir le PDF ?", "Ouvrez le contrat depuis « Mes contrats » puis utilisez le bouton PDF."], ["Où est la sauvegarde ?", "Dans le back-office, onglet « Sauvegarde » (administrateurs)."], ["Raccourcis clavier", "« / » ou Ctrl / ⌘ K : rechercher dans la page (Entrée pour le résultat suivant, Maj + Entrée pour le précédent). Échap : fermer la recherche, une fenêtre ou un menu."], ["Comment imprimer ?", "Bouton Aide › Version imprimable, ou Ctrl / ⌘ P : les menus et boutons sont masqués et le titre et la date d'impression sont ajoutés en haut."], ["Quelles données sont gardées dans mon navigateur ?", "Seulement vos réglages d'affichage et vos choix récents. Aucun cookie publicitaire ni traceur. Vous pouvez les effacer depuis Aide › Cookies et données."]]};
 </script>
 <!-- jp-ux-app:fin -->
 <!-- jp-ux-kit:debut — Compléments génériques du socle jp-ux pour les applis sans recherche ni FAQ (v1.1, 19/11/2026). Réglages : window.JPUX_KIT avant ce bloc. -->
@@ -1093,6 +1454,7 @@ mark.jpux-hit.cur{background:#ff9f0a;outline:2px solid #ff9f0a}
 })();
 </script>
 <script src="lg.js"></script>
+<script>window.BKX_NOFAB=true;</script>
 <script src="bkx.js"></script>
 </body>
 </html>

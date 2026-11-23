@@ -20,6 +20,7 @@ CFG = json.loads((ROOT / "kolab.json").read_text(encoding="utf-8"))
 DIST = ROOT / "dist"
 CORE_TAG = re.compile(r'<script src="core\.js" data-mod="([a-z]+)"></script>')
 LOCAL_SRC = re.compile(r'<script src="([A-Za-z0-9_.-]+\.js)"')
+ASSETS = re.compile(r'<!-- kolab-assets: ([^>]*?) -->')  # fichiers chargés à la demande (ex. OCR local)
 
 
 def tool_files(t):
@@ -30,6 +31,8 @@ def tool_files(t):
 def needed(html, own):
     """Fichiers .js locaux chargés par la page (+ agence.js, chargé par core.js)."""
     names = set(LOCAL_SRC.findall(html))
+    for grp in ASSETS.findall(html):
+        names.update(grp.split())
     if "core.js" in names:
         names.add("agence.js")
     out = {}

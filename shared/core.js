@@ -182,6 +182,15 @@
     try { (await db.collection("m/dam/projects").get()).docs.forEach(function (d) { add((d.data() || {}).name); }); } catch (e) {}
     return Object.keys(names).map(function (k) { return names[k]; }).sort(function (a, b) { return a.localeCompare(b, "fr"); });
   };
+  /* ---------- clients et projets KOLABTOOLS (Planning) : [{client, projects:[noms]}] ---------- */
+  CORE.kolabClients = async function () {
+    var db = await CORE.raw("db"); if (!db) return [];
+    try { var m = await db.doc("m/plan/st/main").get(); if (!m.exists) return [];
+      return ((m.data() || {}).clients || []).filter(function (c) { return c && c.name; }).map(function (c) {
+        return { client: String(c.name).trim(), projects: (c.projects || []).map(function (p) { return String((p && p.name) || "").trim(); }).filter(Boolean) };
+      });
+    } catch (e) { return []; }
+  };
   if (MOD === "droit" || MOD === "inv") {
     var dl = null;
     var fill = function () {
