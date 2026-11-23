@@ -838,7 +838,7 @@ const useg=(key,opts,val)=>`<div class="useg" role="group">${opts.map(([k,l])=>`
 function renderSettings(){
   const me=uiMine(),e=uiEff(),adm=myRole==="admin"&&!!db,hasMine=Object.keys(me).length>0;
   let h=`<div class="adm-box">`;
-  h+=`<section class="adm-sec" id="apparence"><h2>Apparence</h2><p class="note">${hasMine?"Vos réglages (ce navigateur).":"Vous utilisez les réglages de l'équipe."}</p><p class="ap-h">Thème</p>${modeTiles(e.theme)}</section>`;
+  /* section Apparence retirée : la charte Refraction s'applique à tous les outils */
   h+=`<section class="adm-sec"><h2>Affichage</h2><div class="ui-grid">
     <div class="field"><span class="lbl">Densité</span>${useg("dens",[["comfort","Confortable"],["compact","Compacte"]],e.density)}</div>
     <div class="field"><span class="lbl">Barre de navigation</span>${useg("lab",[[true,"Icônes et textes"],[false,"Icônes seules"]],e.labels)}</div></div>
