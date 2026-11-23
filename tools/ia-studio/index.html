@@ -1746,7 +1746,6 @@ details.ap-more .mode-grid{margin-top:10px}
 <script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
-<script src="offl.js"></script>
 <script>
 (() => {
 "use strict";
@@ -8985,7 +8984,6 @@ setView("library");
   const use = (n) => IS_HOSTED ? window.CORE.use(n).catch(() => null) : Promise.resolve(null);
   const [db, user, assets, sample, downloads] = await Promise.all([use("db"), use("user"), use("assets"), use("sample"), use("downloads")]);
   Object.assign(S, { db, user, assets, sample, downloads });
-  if (db && window.OFFL) S.db = window.OFFL.wrap(db); /* mode hors ligne en un clic (offl.js) */
   if (db) db.collection("hft").onSnapshot(qs => { S.hft = qs.docs.map(d => d.data()).sort((a, b) => String(a.at).localeCompare(String(b.at))); hfRefreshTimes(); }, () => {}); else S.hft = lsGet("mv-hft") || [];
   if (IS_HOSTED) window.CORE.use("mcp").then(m => { S.mcp = m || null; }).catch(() => {});
   if (sample && typeof sample.limits === "function") { try { const l = await sample.limits(); S.imgLimit = l && l.images ? l.images.maxCount : null; } catch (e) {} }

@@ -2243,7 +2243,7 @@ body.light #genx{background:rgba(230,234,242,.88)}
   }
   (async()=>{
     if(!window.CORE) return;
-    try{ db=await CORE.raw("db"); ok=!!db && await CORE.isAdmin(); }catch(e){ ok=false; }
+    try{ db=await CORE.use("db"); ok=!!db && await CORE.isAdmin(); }catch(e){ ok=false; }
     if(!ok) return; push(); setInterval(push,4000);
   })();
 })();

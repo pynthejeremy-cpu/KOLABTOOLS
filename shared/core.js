@@ -16,6 +16,9 @@
   /* identification unique + charte Refraction (agence.js) */
   if (document.readyState === "loading") document.write('<script src="agence.js" data-mod="' + MOD + '"><\/script>');
   else { var ag = document.createElement("script"); ag.src = "agence.js"; ag.setAttribute("data-mod", MOD); document.head.appendChild(ag); }
+  /* mode hors ligne en un clic (offl.js) : journal local des écritures et validation avant / après au retour en ligne */
+  if (document.readyState === "loading") document.write('<script src="offl.js"><\/script>');
+  else { var of = document.createElement("script"); of.src = "offl.js"; document.head.appendChild(of); }
   var MODS = [
     ["hub", "Accueil", "index.html", "◆"],
     ["plan", "Planning", "planning.html", "▦"],
@@ -120,7 +123,7 @@
       if (memo[n]) return memo[n];
       memo[n] = window.claude.use(n).then(function (ns) {
         if (!ns) return ns;
-        if (n === "db") return wDb(ns);
+        if (n === "db") { var w = wDb(ns); return window.OFFL ? window.OFFL.wrap(w) : w; }
         if (n === "user") return wUser(ns);
         return ns;
       });

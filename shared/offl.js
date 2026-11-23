@@ -1,4 +1,4 @@
-/* ---- IA Studio · mode hors ligne en un clic ----
+/* ---- KOLABTOOLS · mode hors ligne en un clic (tous les outils, chargé par core.js) ----
    Hors ligne (au clic, ou tout seul quand Internet tombe) : les écritures en base sont gardées dans un journal local
    au lieu d'être envoyées. En repassant en ligne, une page liste chaque changement sous forme de tâche, avec l'avant
    (version en ligne) et l'après (votre version), signale les conflits (quelqu'un a modifié entre-temps),
@@ -6,7 +6,7 @@
 (function () {
 "use strict";
 if (window.__OFFL) return; window.__OFFL = 1;
-var KEY = "ia-offjournal", MKEY = "ia-offmode";
+var MOD = (window.CORE_API && window.CORE_API.mod) || "outil", KEY = "kolab-offjournal:" + MOD, MKEY = "kolab-offmode:" + MOD;
 var J = load(), OFF = J.length > 0 || ls(MKEY) === "1", seen = {}, real = null, auto = false;
 function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
 function load() { try { var a = JSON.parse(ls(KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
@@ -59,9 +59,16 @@ function setOff(v, why) {
   OFF = !!v; auto = why === "auto"; ls(MKEY, OFF ? "1" : null); paint();
   if (OFF) toast(why === "auto" ? "Connexion perdue : passage hors ligne. Vos changements sont gardés sur cet appareil." : "Hors ligne : vos changements sont gardés sur cet appareil jusqu'à votre retour en ligne.");
 }
+function host() {
+  var box = document.getElementById("railMode"); if (box) return box;               /* IA Studio : bas du rail */
+  box = document.getElementById("offlPill");
+  if (!box && document.body) { box = document.createElement("div"); box.id = "offlPill"; box.className = "offl-pill"; document.body.appendChild(box); }
+  return box;
+}
 function paint() {
-  var box = document.getElementById("railMode"); if (!box) return;
-  if (!real) { box.textContent = box.textContent || "Hors ligne"; return; }
+  var box = host(); if (!box) return;
+  if (!real) { if (box.id === "offlPill") box.hidden = true; return; }
+  box.hidden = false;
   var b = box.querySelector("button.offl-b");
   if (!b) { box.textContent = ""; b = document.createElement("button"); b.type = "button"; b.className = "offl-b"; b.addEventListener("click", click); box.appendChild(b); }
   var n = J.length;
@@ -88,7 +95,10 @@ function label(path) {
   if ((m = path.match(/(?:^|\/)p\/([^/]+)\/snaps\/([^/]+)$/))) return [P(m[1]), "Version enregistrée"];
   if ((m = path.match(/(?:^|\/)(?:projects|idx)\/([^/]+)$/))) return [P(m[1]), "Fiche du projet"];
   if (/(?:^|\/)profiles\//.test(path)) return ["Profil", "Votre profil"];
-  return ["Base", path];
+  var MODN = { plan: "Planning", inv: "Inventaire", droit: "Droit à l'image", ia: "IA Studio", dam: "DAM Studio" };
+  var mod = (path.match(/^m\/([a-z]+)\//) || [])[1] || MOD, rest = path.replace(/^m\/[a-z]+\//, "").split("/");
+  var COL = { st: "Planning général", pj: "Projet du planning", bk: "Réservations", items: "Matériel", projects: "Projets", ct: "Contrats", sig: "Signatures", pay: "Coordonnées bancaires", admin: "Réglages", roles: "Rôles", invites: "Invitations", access: "Accès" };
+  return [MODN[mod] || document.title || "Outil", (COL[rest[0]] || rest[0] || "Élément") + (rest[1] && rest[1] !== "main" ? " · " + rest[1].slice(0, 10) : "")];
 }
 var NAMES = { title: "Titre", scenario: "Scénario", mood: "Moodboard", order: "Ordre des plans", planning: "Planning", places: "Lieux", products: "Produits", brief: "Introduction", gen: "Génération", mnt: "Montage", delivery: "Livraison", client: "Client", project: "Projet", name: "Nom", move: "Mouvement de caméra", light: "Lumière", notes: "Notes", hfPrompt: "Prompt Higgsfield", ovLib: "Incrustations", brand: "Intro / outro de marque", deadline: "Deadline", tasks: "Tâches", versions: "Versions" };
 function short(v) {
@@ -165,6 +175,7 @@ css.textContent = ".offl-b{all:unset;box-sizing:border-box;cursor:pointer;displa
   ".offl-b b{min-width:16px;padding:0 4px;border-radius:8px;background:#fff;color:#e3120b;text-align:center}" +
   ".offl-b:focus-visible{outline:2px solid currentColor;outline-offset:2px}" +
   ".rail-mode:has(.offl-b){opacity:1}" +
+  ".offl-pill{position:fixed;right:0;top:calc(50% - 86px);z-index:2147482990}.offl-pill .offl-b{border-radius:12px 0 0 12px!important;border-right:0!important}.offl-pill[hidden]{display:none}.offl-pill .offl-b{background:rgba(20,20,22,.86);color:#fff;padding:7px 12px;font-size:12px;border:1px solid rgba(128,128,128,.4);backdrop-filter:blur(12px)}.offl-pill .offl-b.off{background:#e3120b}@media print{.offl-pill{display:none}}" +
   ".offl-dlg{width:min(980px,calc(100% - 24px))}.offl-body{padding:14px 18px;display:grid;gap:14px;max-height:70vh;overflow:auto}" +
   ".offl-list{display:grid;gap:12px}.offl-task{border:2px solid var(--bd,#888);border-radius:12px;padding:12px;display:grid;gap:10px}" +
   ".offl-task.conflict{border-color:#e3120b}.offl-task.done{border-color:#30d158}" +

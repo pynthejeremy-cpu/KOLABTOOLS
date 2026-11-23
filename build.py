@@ -35,6 +35,7 @@ def needed(html, own):
         names.update(grp.split())
     if "core.js" in names:
         names.add("agence.js")
+        names.add("offl.js")
     out = {}
     for n in sorted(names):
         src = own.get(n) or ROOT / "shared" / n
