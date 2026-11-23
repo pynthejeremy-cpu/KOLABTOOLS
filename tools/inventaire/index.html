@@ -111,16 +111,17 @@ main{min-width:0;min-height:0;overflow:auto;position:relative;background:var(--p
 .switch input:disabled+.sw-track{opacity:.45}
 .acc-wrap{overflow-x:auto}
 .acc-list{min-width:520px;display:flex;flex-direction:column}
-.acc-row{display:grid;grid-template-columns:minmax(118px,1.3fr) repeat(6,44px) auto;gap:4px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.acc-row{display:grid;grid-template-columns:minmax(118px,1fr) repeat(6,56px) 118px;gap:4px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
 .acc-row.head{border-top:0;font-size:11px;color:var(--mute);font-weight:800}
 .acc-h{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;line-height:1.1}
 .acc-h .ms{font-size:18px}
 .acc-h em{font-style:normal;font-size:9.5px}
 .acc-who b{display:block;font-size:13.5px}
 .acc-who em{font-style:normal;font-size:11px;color:var(--mute);display:block;line-height:1.25}
-.acc-c{display:flex;justify-content:center}
+.acc-c{display:flex;justify-content:center;align-items:center}
+.acc-i{display:none}
 .acc-c input{width:22px;height:22px;accent-color:var(--red)}
-.acc-a{display:flex;gap:4px}
+.acc-a{display:flex;gap:4px;justify-content:flex-end}
 .mini{border:1px solid var(--bd);background:var(--card);color:var(--mute);border-radius:8px;padding:5px 8px;font-size:11px;font-weight:800}
 .mini:hover{border-color:var(--red);color:var(--red)}
 .acc-mods{display:contents}
@@ -133,6 +134,7 @@ main{min-width:0;min-height:0;overflow:auto;position:relative;background:var(--p
   .acc-who{display:block;margin-bottom:9px}
   .acc-mods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 12px}
   .acc-c{justify-content:flex-start;gap:9px;min-width:0}
+  .acc-i{display:inline-block;font-size:18px;opacity:.85;flex:none}
   .acc-l{display:block;font-style:normal;font-size:12.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .acc-a{margin-top:10px}
 }
@@ -965,7 +967,7 @@ function renderBO(){
       <div class="acc-wrap"><div class="acc-list" role="table" aria-label="Services par rôle">
         <div class="acc-row head"><span>Rôle</span>${BO_MOD.map(m=>`<span class="acc-h" title="${esc(m[1])}"><span class="ms">${m[2]}</span><em>${esc(m[1])}</em></span>`).join("")}<span></span></div>
         ${BO_ROLES.map(r=>`<div class="acc-row"><span class="acc-who"><b>${esc(ROLES[r]||r)}</b><em>${esc(ROLE_HINT[r]||"")}</em></span>
-          <span class="acc-mods">${BO_MOD.map(m=>`<label class="acc-c"><input type="checkbox" data-boacc="${m[0]}" data-r="${r}" ${boCan(m[0],r)?"checked":""} ${ro?"disabled":""} aria-label="${esc(m[1])} pour ${esc(ROLES[r]||r)}"><em class="acc-l">${esc(m[1])}</em></label>`).join("")}</span>
+          <span class="acc-mods">${BO_MOD.map(m=>`<label class="acc-c"><input type="checkbox" data-boacc="${m[0]}" data-r="${r}" ${boCan(m[0],r)?"checked":""} ${ro?"disabled":""} aria-label="${esc(m[1])} pour ${esc(ROLES[r]||r)}"><span class="ms acc-i" aria-hidden="true">${m[2]}</span><em class="acc-l">${esc(m[1])}</em></label>`).join("")}</span>
           <span class="acc-a">${ro?"":`<button class="mini" data-boact="all" data-r="${r}">Tout</button><button class="mini" data-boact="none" data-r="${r}">Aucun</button>`}</span></div>`).join("")}
       </div></div>
       <p class="note">Un onglet décoché disparaît de la barre de navigation et du menu « Plus » pour ce rôle.</p></section>`;
