@@ -505,8 +505,9 @@ function adminView(){
   const setC=p=>save({charte:{...c,...p}});
   const free=cfg.liberty==="libre";
   const radio=(val,t,d)=>el("label",{class:"radio"},el("input",{type:"radio",name:"lib",value:val,checked:cfg.liberty===val,onchange:()=>save({liberty:val})}),el("span",{},el("b",{text:t}),el("span",{class:"small muted",text:d})));
+  if(S.boTab==="ui")S.boTab="acc"; /* onglet Interface retiré : la charte Refraction s'applique à tous */
   const T=S.boTab,nPend=S.access.filter(a=>a.status==="pending").length;
-  const TABS=[["acc","Comptes et accès"],["feat","Fonctionnalités"],["ui","Interface"],["save","Sauvegarde"]];
+  const TABS=[["acc","Comptes et accès"],["feat","Fonctionnalités"],["save","Sauvegarde"]];
   return el("div",{style:"display:grid;gap:20px"},
     el("h2",{text:"Administration"}),
     el("p",{class:"muted",style:"margin:-12px 0 0",text:"Réservé à l'administrateur de l'appli. Ces réglages s'appliquent à tous les comptes : personnes filmées, diffuseurs, producteurs et agences."}),
